@@ -77,14 +77,56 @@
       var id;
       Page.__super__.constructor.call(this, pageContainerDom);
       id = this.dom.id.replace("pageContainer", "");
+      this.markingWrapper = new Suzaku.Widget("<div class='marking-wrapper'></div>");
+      this.markingWrapper.appendTo(this);
       this.initInteraction();
     }
 
     Page.prototype.initInteraction = function() {
       var _this = this;
-      this.dom.onmousedown = function() {};
-      this.dom.onmouseup = function() {};
-      return this.dom.onmousemove = function() {};
+      this.dom.onmousedown = function(evt) {
+        var x, y;
+        x = evt.offsetX || evt.layerX;
+        y = evt.offsetY || evt.layerY;
+        _this.mouseStartPos = {
+          x: x,
+          y: y
+        };
+        _this.tempRectMark = new Suzaku.Widget("<div class='tempRectMark rectMark'></div>");
+        _this.tempRectMark.J.css({
+          left: x,
+          top: y
+        });
+        return _this.tempRectMark.appendTo(_this.markingWrapper);
+      };
+      this.dom.onmouseup = function(evt) {
+        if (!_this.tempRectMark) {
+          return false;
+        }
+        _this.mouseStartPos = null;
+        _this.tempRectMark.remove();
+        return _this.tempRectMark = null;
+      };
+      this.dom.onmouseleave = function(evt) {
+        if (!_this.tempRectMark) {
+          return false;
+        }
+        _this.mouseStartPos = null;
+        _this.tempRectMark.remove();
+        return _this.tempRectMark = null;
+      };
+      return this.dom.onmousemove = function(evt) {
+        var x, y;
+        if (!_this.tempRectMark) {
+          return false;
+        }
+        x = evt.offsetX || evt.layerX;
+        y = evt.offsetY || evt.layerY;
+        return _this.tempRectMark.J.css({
+          left: x,
+          top: y
+        });
+      };
     };
 
     return Page;

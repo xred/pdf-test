@@ -30,16 +30,37 @@ class RightSection extends Suzaku.Widget
 class FullCommentItem extends Suzaku.Widget
   constructor:(data)->
     super window.tpls['full-comment-item']
-
+  
 class Page extends Suzaku.Widget
   constructor:(pageContainerDom)->
     super pageContainerDom
     id = @dom.id.replace "pageContainer",""
+    @markingWrapper = new Suzaku.Widget "<div class='marking-wrapper'></div>"
+    @markingWrapper.appendTo this
     @initInteraction()
   initInteraction:->
-    @dom.onmousedown = =>
-    @dom.onmouseup = =>
-    @dom.onmousemove = =>
+    @dom.onmousedown = (evt)=>
+      x = evt.offsetX or evt.layerX
+      y = evt.offsetY or evt.layerY
+      @mouseStartPos = x:x,y:y
+      @tempRectMark = new Suzaku.Widget("<div class='tempRectMark rectMark'></div>")
+      @tempRectMark.J.css left:x,top:y
+      @tempRectMark.appendTo @markingWrapper
+    @dom.onmouseup = (evt)=>
+      return false if not @tempRectMark
+      @mouseStartPos = null
+      @tempRectMark.remove()
+      @tempRectMark = null
+    @dom.onmouseleave = (evt)=>
+      return false if not @tempRectMark
+      @mouseStartPos = null
+      @tempRectMark.remove()
+      @tempRectMark = null
+    @dom.onmousemove = (evt)=>
+      return false if not @tempRectMark
+      x = evt.offsetX or evt.layerX
+      y = evt.offsetY or evt.layerY
+      @tempRectMark.J.css left:x,top:y
       
 RunPDFViewer pdfUrl,=>
   new App()
