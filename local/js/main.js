@@ -15,6 +15,7 @@
     function App() {
       var am, tm,
         _this = this;
+      App.__super__.constructor.apply(this, arguments);
       am = new Suzaku.ApiManager;
       am.setPath("");
       tm = new Suzaku.TemplateManager;
@@ -27,14 +28,18 @@
     }
 
     App.prototype.start = function() {
-      var p, pages, _i, _len, _ref;
+      var p, pages, _i, _len, _ref,
+        _this = this;
       this.pages = [];
       _ref = pages = $(".page");
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         p = _ref[_i];
-        this.pages.push(new Page(p));
+        this.pages.push(new Page(this, p));
       }
-      return this.rightSection = new RightSection();
+      this.rightSection = new RightSection();
+      return $("#new-comment").on("click", function() {
+        return _this.emit("newComment");
+      });
     };
 
     return App;
@@ -49,8 +54,6 @@
       RightSection.__super__.constructor.call(this, "#right-section");
       for (i = _i = 1; _i <= 5; i = ++_i) {
         item = new FullCommentItem();
-        console.log(item);
-        console.log(this.UI['comments-wrapper']);
         item.appendTo(this.UI['comments-wrapper']);
       }
     }
@@ -73,21 +76,38 @@
   Page = (function(_super) {
     __extends(Page, _super);
 
-    function Page(pageContainerDom) {
-      var id;
+    function Page(app, pageContainerDom) {
+      var id,
+        _this = this;
       Page.__super__.constructor.call(this, pageContainerDom);
       id = this.dom.id.replace("pageContainer", "");
       this.markingWrapper = new Suzaku.Widget("<div class='marking-wrapper'></div>");
-      this.markingWrapper.appendTo(this);
-      this.initInteraction();
+      this.markingWrapper.appendTo(this.dom);
+      this.textLayerJ = this.J.find('.textLayer');
+      this.marks = [];
+      app.on("newComment", function() {
+        return _this.newCommentActive();
+      });
+      app.on("newCommentCompleted", function() {
+        return _this.clearListeners();
+      });
     }
 
-    Page.prototype.initInteraction = function() {
+    Page.prototype.clearListeners = function() {
+      this.dom.onmouseup = null;
+      this.dom.onmousedown = null;
+      return this.dom.onmousemove = null;
+    };
+
+    Page.prototype.newCommentActive = function() {
       var _this = this;
       this.dom.onmousedown = function(evt) {
-        var x, y;
-        x = evt.offsetX || evt.layerX;
-        y = evt.offsetY || evt.layerY;
+        var r, x, y;
+        evt.preventDefault();
+        _this.textLayerJ = _this.J.find('.textLayer');
+        r = _this.textLayerJ[0].getBoundingClientRect();
+        x = evt.clientX - r.left;
+        y = evt.clientY - r.top;
         _this.mouseStartPos = {
           x: x,
           y: y
@@ -100,34 +120,44 @@
         return _this.tempRectMark.appendTo(_this.markingWrapper);
       };
       this.dom.onmouseup = function(evt) {
-        if (!_this.tempRectMark) {
+        if (!_this.mouseStartPos) {
           return false;
         }
         _this.mouseStartPos = null;
-        _this.tempRectMark.remove();
-        return _this.tempRectMark = null;
-      };
-      this.dom.onmouseleave = function(evt) {
-        if (!_this.tempRectMark) {
-          return false;
-        }
-        _this.mouseStartPos = null;
-        _this.tempRectMark.remove();
-        return _this.tempRectMark = null;
+        _this.clearListeners();
+        return _this.confirmNewComment();
       };
       return this.dom.onmousemove = function(evt) {
-        var x, y;
-        if (!_this.tempRectMark) {
+        var height, left, r, sp, top, width, x, y;
+        if (!_this.mouseStartPos) {
           return false;
         }
-        x = evt.offsetX || evt.layerX;
-        y = evt.offsetY || evt.layerY;
+        r = _this.textLayerJ[0].getBoundingClientRect();
+        x = evt.clientX - r.left;
+        y = evt.clientY - r.top;
+        sp = _this.mouseStartPos;
+        if (y < sp.y) {
+          top = y;
+        } else {
+          top = sp.y;
+        }
+        if (x < sp.x) {
+          left = x;
+        } else {
+          left = sp.x;
+        }
+        width = Math.abs(x - sp.x);
+        height = Math.abs(y - sp.y);
         return _this.tempRectMark.J.css({
-          left: x,
-          top: y
+          left: left,
+          top: top,
+          width: width,
+          height: height
         });
       };
     };
+
+    Page.prototype.confirmNewComment = function() {};
 
     return Page;
 

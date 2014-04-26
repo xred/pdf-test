@@ -23,39 +23,53 @@ class Suzaku
 class EventEmitter
   constructor:()->
     @_events = {}
-  on:(event,callback)->
-    #console.log this if debug
+  on:(event,labels,callback)->
+    #labels is string. splited by space
+    if not callback
+      callback = labels
+      labels = null
     @_events[event] = [] if not @_events[event]
-    @_events[event].push callback
-    return callback
+    e = callback:callback,labels:if labels then labels.split(" ") else null
+    @_events[event].push e
+    return e
   once:(event,callback)->
     if not callback
       return console.error "need a callback！ --Suzaku.EventEmitter"
-    f = null
+    e = null
     f = =>
-      @off event,f
+      @off event,e
       callback.apply this,arguments
-    @on event,f
-    return f
-  off:(event,listener)->
-    if typeof listener is "function"
-      if not @_events[event]
-        console.warn "no events named #{event} --Suzaku.EventEmitter"
-        return false
-      for func in @_events[event]
-        if func is listener
-          Utils.removeItem @_events[event],func
+    e = @on event,f
+    return e
+  off:(event,target)->
+    if not @_events[event]
+      console.warn "no events named #{event} --Suzaku.EventEmitter"
+      return false
+    type = typeof target
+    switch type
+      when "object"
+        for e in @_events[event] when e is target
+          Utils.removeItem @_events[event],e
           return true
-      console.error "cannot find listener #{listener} of #{event}-- Suzaku.EventEmitter"
-    else
-      return false if not @_events[event]
-      for func in @_events[event]
-        func = null
-      delete @_events[event]
-      return true
+        console.error "cannot find event #{target} of #{event}-- Suzaku.EventEmitter"
+      when "string"
+        remains = []
+        for e in @_events[event]
+          found = false
+          for l in e.labels when l is target
+            found = true
+            break
+          if not found then remains.push e
+        @_events[event] = remains
+      else
+        for e in @_events[event]
+          e = null
+        delete @_events[event]
+        return true
   emit:(event)->
     return false if !@_events[event]
-    for func in @_events[event]
+    for e in @_events[event]
+      func = e.callback
       continue if typeof func isnt "function"
       func.apply this,Array.prototype.slice.call arguments,1
       

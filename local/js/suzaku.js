@@ -41,68 +41,98 @@
       this._events = {};
     }
 
-    EventEmitter.prototype.on = function(event, callback) {
+    EventEmitter.prototype.on = function(event, labels, callback) {
+      var e;
+      if (!callback) {
+        callback = labels;
+        labels = null;
+      }
       if (!this._events[event]) {
         this._events[event] = [];
       }
-      this._events[event].push(callback);
-      return callback;
+      e = {
+        callback: callback,
+        labels: labels ? labels.split(" ") : null
+      };
+      this._events[event].push(e);
+      return e;
     };
 
     EventEmitter.prototype.once = function(event, callback) {
-      var f,
+      var e, f,
         _this = this;
       if (!callback) {
         return console.error("need a callback！ --Suzaku.EventEmitter");
       }
-      f = null;
+      e = null;
       f = function() {
-        _this.off(event, f);
+        _this.off(event, e);
         return callback.apply(_this, arguments);
       };
-      this.on(event, f);
-      return f;
+      e = this.on(event, f);
+      return e;
     };
 
-    EventEmitter.prototype.off = function(event, listener) {
-      var func, _i, _j, _len, _len1, _ref, _ref1;
-      if (typeof listener === "function") {
-        if (!this._events[event]) {
-          console.warn("no events named " + event + " --Suzaku.EventEmitter");
-          return false;
-        }
-        _ref = this._events[event];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          func = _ref[_i];
-          if (func === listener) {
-            Utils.removeItem(this._events[event], func);
+    EventEmitter.prototype.off = function(event, target) {
+      var e, found, l, remains, type, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
+      if (!this._events[event]) {
+        console.warn("no events named " + event + " --Suzaku.EventEmitter");
+        return false;
+      }
+      type = typeof target;
+      switch (type) {
+        case "object":
+          _ref = this._events[event];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            e = _ref[_i];
+            if (!(e === target)) {
+              continue;
+            }
+            Utils.removeItem(this._events[event], e);
             return true;
           }
-        }
-        return console.error("cannot find listener " + listener + " of " + event + "-- Suzaku.EventEmitter");
-      } else {
-        if (!this._events[event]) {
-          return false;
-        }
-        _ref1 = this._events[event];
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          func = _ref1[_j];
-          func = null;
-        }
-        delete this._events[event];
-        return true;
+          return console.error("cannot find event " + target + " of " + event + "-- Suzaku.EventEmitter");
+        case "string":
+          remains = [];
+          _ref1 = this._events[event];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            e = _ref1[_j];
+            found = false;
+            _ref2 = e.labels;
+            for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+              l = _ref2[_k];
+              if (!(l === target)) {
+                continue;
+              }
+              found = true;
+              break;
+            }
+            if (!found) {
+              remains.push(e);
+            }
+          }
+          return this._events[event] = remains;
+        default:
+          _ref3 = this._events[event];
+          for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+            e = _ref3[_l];
+            e = null;
+          }
+          delete this._events[event];
+          return true;
       }
     };
 
     EventEmitter.prototype.emit = function(event) {
-      var func, _i, _len, _ref, _results;
+      var e, func, _i, _len, _ref, _results;
       if (!this._events[event]) {
         return false;
       }
       _ref = this._events[event];
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        func = _ref[_i];
+        e = _ref[_i];
+        func = e.callback;
         if (typeof func !== "function") {
           continue;
         }

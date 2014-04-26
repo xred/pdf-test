@@ -11,7 +11,7 @@ body{
 		width:350px;
 		background-color:#666;
 		z-index:10;
-		.comments-wrapper{
+		.inner{
 				margin:15px;
 				margin-top:50px;
 		}
@@ -25,10 +25,17 @@ body{
 		margin-top:10px;
 }
 .marking-wrapper{
-		position:relative;
+		position:absolute;
+		top:0;
+		left:0;
+		border:5px solid red;
 		.rectMark{
 				display:block;
 				position:absolute;
-				border:2px solid orange;
+				//border:3px solid orange;
+				background-color:rgba(100,50,100,0.3);
 		}
+}
+#viewerContainer{
+		margin-right:350px;
 }
