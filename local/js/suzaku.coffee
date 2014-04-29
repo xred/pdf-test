@@ -50,6 +50,7 @@ class EventEmitter
       when "object"
         for e in @_events[event] when e is target
           Utils.removeItem @_events[event],e
+          if @_events[event].length is 0 then delete @_events[event]
           return true
         console.error "cannot find event #{target} of #{event}-- Suzaku.EventEmitter"
       when "string"
@@ -61,11 +62,12 @@ class EventEmitter
             break
           if not found then remains.push e
         @_events[event] = remains
+        if @_events[event].length is 0 then delete @_events[event]
       else
         for e in @_events[event]
           e = null
         delete @_events[event]
-        return true
+    return true
   emit:(event)->
     return false if !@_events[event]
     for e in @_events[event]
@@ -503,10 +505,7 @@ window.Suzaku.Utils = Utils =
   setInterval:(time,callback)->
     return window.setInterval callback,time
   count:(obj)->
-    counter = 0
-    for name of obj
-      counter += 1
-    return counter
+    return Object.keys(obj).length
   createQueue:(number,callback)->
     q = new EventEmitter()
     timer = 0

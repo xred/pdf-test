@@ -89,9 +89,13 @@
               continue;
             }
             Utils.removeItem(this._events[event], e);
+            if (this._events[event].length === 0) {
+              delete this._events[event];
+            }
             return true;
           }
-          return console.error("cannot find event " + target + " of " + event + "-- Suzaku.EventEmitter");
+          console.error("cannot find event " + target + " of " + event + "-- Suzaku.EventEmitter");
+          break;
         case "string":
           remains = [];
           _ref1 = this._events[event];
@@ -111,7 +115,11 @@
               remains.push(e);
             }
           }
-          return this._events[event] = remains;
+          this._events[event] = remains;
+          if (this._events[event].length === 0) {
+            delete this._events[event];
+          }
+          break;
         default:
           _ref3 = this._events[event];
           for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
@@ -119,8 +127,8 @@
             e = null;
           }
           delete this._events[event];
-          return true;
       }
+      return true;
     };
 
     EventEmitter.prototype.emit = function(event) {
@@ -896,12 +904,7 @@
       return window.setInterval(callback, time);
     },
     count: function(obj) {
-      var counter, name;
-      counter = 0;
-      for (name in obj) {
-        counter += 1;
-      }
-      return counter;
+      return Object.keys(obj).length;
     },
     createQueue: function(number, callback) {
       var q, timer;
