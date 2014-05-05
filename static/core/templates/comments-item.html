@@ -1,0 +1,35 @@
+<div class="comments-item" >
+	<header >
+		<button class="fold" data-id="fold" style="display:none;" >fold</button>
+		<button class="add-comment"><img src="/static/core/img/icon-add.png"  /></button>
+	</header>
+	<ul data-id="list" >
+	</ul>
+	<template data-id="unfold-btn-tpl" >
+		<li class="unfold" >
+			<p><span data-id="num" >14</span> comments...click to unfold</p>
+		</li>
+	</template>
+	<template data-id="single-comment-li-tpl" >
+		<li class="single-comment-li" >
+			<img class="avatar" data-id="avatar" src="/static/core/img/test-avatar.png"></img>
+			<div class="content-wrapper" >
+				<p><span class="id" data-id="id" >Roxasora</span>
+					<span class="date" data-id="date" >2014.03.02</span></p>
+				<section class="content" data-id="content" >
+					Dynamic languages such as JavaScript are more difficult to com-pile than statically typed ones.
+				</section>
+			</div>
+			<footer >
+				<div >
+					<img src="/static/core/img/icon-reply.png"  />
+					<span data-id="reply-num" >20</span>
+				</div>
+				<div >
+					<img src="/static/core/img/icon-vote-up.png"  />
+					<span data-id="up-vote-num" >30</span>
+				</div>
+			</footer>
+		</li>
+	</template>
+</div>

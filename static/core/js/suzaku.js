@@ -897,6 +897,34 @@
         return null;
       }
     },
+    parseUrl: function(url) {
+      var a, obj;
+      a = document.createElement('a');
+      a.href = url;
+      obj = {
+        protocol: a.protocol.replace(':', ''),
+        host: a.hostname,
+        port: a.port,
+        query: a.search,
+        params: (function() {
+          var p, parts, ret, s, _i, _len;
+          ret = {};
+          parts = a.search.replace(/^\?/, '').split('&');
+          for (_i = 0, _len = parts.length; _i < _len; _i++) {
+            p = parts[_i];
+            if (!(p)) {
+              continue;
+            }
+            s = p.split('=');
+            ret[s[0]] = s[1];
+          }
+          return ret;
+        })(),
+        hash: a.hash.replace('#', ''),
+        path: a.pathname.replace(/^([^\/])/, '/$1')
+      };
+      return obj;
+    },
     setTimeout: function(time, callback) {
       return window.setTimeout(callback, time);
     },
@@ -939,37 +967,43 @@
       }
     },
     localData: function(action, name, value) {
-      var err, v;
-      switch (action) {
-        case "set":
-        case "save":
-          if (value === void 0) {
-            return console.error("no value to save.");
-          } else {
-            window.localStorage.setItem(name, JSON.stringify(value));
+      var e, err, v;
+      try {
+        switch (action) {
+          case "set":
+          case "save":
+            if (value === void 0) {
+              return console.error("no value to save.");
+            } else {
+              window.localStorage.setItem(name, JSON.stringify(value));
+              return true;
+            }
+            break;
+          case "get":
+          case "read":
+            v = window.localStorage.getItem(name);
+            if (!v) {
+              return null;
+            }
+            try {
+              return JSON.parse(v);
+            } catch (_error) {
+              err = _error;
+              return v;
+            }
+            break;
+          case "clear":
+          case "remove":
+            window.localStorage.removeItem(name);
             return true;
-          }
-          break;
-        case "get":
-        case "read":
-          v = window.localStorage.getItem(name);
-          if (!v) {
-            return null;
-          }
-          try {
-            return JSON.parse(v);
-          } catch (_error) {
-            err = _error;
-            return v;
-          }
-          break;
-        case "clear":
-        case "remove":
-          window.localStorage.removeItem(name);
-          return true;
-        default:
-          return console.error("invailid localData action:" + action);
+          default:
+            console.error("invailid localData action:" + action);
+        }
+      } catch (_error) {
+        e = _error;
+        console.error(e);
       }
+      return false;
     },
     bindMobileClick: function(dom, callback) {
       var J;

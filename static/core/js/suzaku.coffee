@@ -500,6 +500,24 @@ window.Suzaku.Utils = Utils =
     if r = url.match(reg)
       return unescape(r[2])
     else return null 
+  parseUrl:(url)->
+    a =  document.createElement('a')
+    a.href = url
+    obj = 
+      protocol: a.protocol.replace(':','')
+      host: a.hostname
+      port: a.port
+      query: a.search
+      params: do ->
+          ret = {}
+          parts = a.search.replace(/^\?/,'').split('&')
+          for p in parts when p
+            s = p.split('=')
+            ret[s[0]] = s[1]
+          return ret
+      hash: a.hash.replace('#','')
+      path: a.pathname.replace(/^([^\/])/,'/$1')
+    return obj
   setTimeout:(time,callback)->
     return window.setTimeout callback,time
   setInterval:(time,callback)->
@@ -529,25 +547,29 @@ window.Suzaku.Utils = Utils =
       return arguments[index]
   localData:(action,name,value)->
     #action = "set,clear,get"
-    switch action
-      when "set","save"
-        if value is undefined
-          return console.error "no value to save."
-        else
-          window.localStorage.setItem name,JSON.stringify(value)
+    try
+      switch action
+        when "set","save"
+          if value is undefined
+            return console.error "no value to save."
+          else
+            window.localStorage.setItem name,JSON.stringify(value)
+            return true
+        when "get","read"
+          v = window.localStorage.getItem name 
+          if not v then return null
+          try
+            return JSON.parse(v)
+          catch err
+            return v
+        when "clear","remove"
+          window.localStorage.removeItem name
           return true
-      when "get","read"
-        v = window.localStorage.getItem name 
-        if not v then return null
-        try
-          return JSON.parse(v)
-        catch err
-          return v
-      when "clear","remove"
-        window.localStorage.removeItem name
-        return true
-      else
-        console.error "invailid localData action:#{action}"
+        else
+          console.error "invailid localData action:#{action}"
+    catch e
+      console.error e
+    return false
   bindMobileClick:(dom,callback)->
     if not dom
       return console.error "no dom exist --Suzaku.bindMobileClick"

@@ -1,792 +1,815 @@
-window.RunPDFViewer = function(_pdfUrl,_pdf_ready_callback){
-  console.log('use strict');
-  PDFJS.imageResourcesPath = 'pdfjs/web/images/';
-  PDFJS.workerSrc = 'pdfjs/build/pdf.worker.js';
-  PDFJS.cMapUrl = 'pdfjs/web/cmaps/';
-  PDFJS.cMapPacked = true;
-  var testPdfUrl = 'pdfjs/web/compressed.tracemonkey-pldi-09.pdf';
-  var DEFAULT_URL = _pdfUrl || testPdfUrl;
-  var DEFAULT_SCALE = 'auto';
-  var DEFAULT_SCALE_DELTA = 1.1;
-  var UNKNOWN_SCALE = 0;
-  var CACHE_SIZE = 20;
-  var CSS_UNITS = 96.0 / 72.0;
-  var SCROLLBAR_PADDING = 40;
-  var VERTICAL_PADDING = 5;
-  var MAX_AUTO_SCALE = 1.25;
-  var MIN_SCALE = 0.25;
-  var MAX_SCALE = 4.0;
-  var VIEW_HISTORY_MEMORY = 20;
-  var SCALE_SELECT_CONTAINER_PADDING = 8;
-  var SCALE_SELECT_PADDING = 22;
-  var THUMBNAIL_SCROLL_MARGIN = -19;
-  var USE_ONLY_CSS_ZOOM = false;
-  var CLEANUP_TIMEOUT = 30000;
-  var IGNORE_CURRENT_POSITION_ON_ZOOM = false;
-  var RenderingStates = {
-    INITIAL: 0,
-    RUNNING: 1,
-    PAUSED: 2,
-    FINISHED: 3
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* Copyright 2012 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/* globals PDFJS, PDFBug, FirefoxCom, Stats, Cache, PDFFindBar, CustomStyle,
+           PDFFindController, ProgressBar, TextLayerBuilder, DownloadManager,
+           getFileName, scrollIntoView, getPDFFileNameFromURL, PDFHistory,
+           Preferences, ViewHistory, PageView, ThumbnailView, URL,
+           noContextMenuHandler, SecondaryToolbar, PasswordPrompt,
+           PresentationMode, HandTool, Promise, DocumentProperties */
+
+'use strict';
+
+var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
+var DEFAULT_SCALE = 'auto';
+var DEFAULT_SCALE_DELTA = 1.1;
+var UNKNOWN_SCALE = 0;
+var CACHE_SIZE = 20;
+var CSS_UNITS = 96.0 / 72.0;
+var SCROLLBAR_PADDING = 40;
+var VERTICAL_PADDING = 5;
+var MAX_AUTO_SCALE = 1.25;
+var MIN_SCALE = 0.25;
+var MAX_SCALE = 4.0;
+var VIEW_HISTORY_MEMORY = 20;
+var SCALE_SELECT_CONTAINER_PADDING = 8;
+var SCALE_SELECT_PADDING = 22;
+var THUMBNAIL_SCROLL_MARGIN = -19;
+var USE_ONLY_CSS_ZOOM = false;
+var CLEANUP_TIMEOUT = 30000;
+var IGNORE_CURRENT_POSITION_ON_ZOOM = false;
+var RenderingStates = {
+  INITIAL: 0,
+  RUNNING: 1,
+  PAUSED: 2,
+  FINISHED: 3
+};
+var FindStates = {
+  FIND_FOUND: 0,
+  FIND_NOTFOUND: 1,
+  FIND_WRAPPED: 2,
+  FIND_PENDING: 3
+};
+
+PDFJS.imageResourcesPath = '/static/core/pdfjs/web/images/';
+PDFJS.workerSrc = '/static/core/pdfjs/build/pdf.worker.js';
+PDFJS.cMapUrl = '/static/core/pdfjs/web/cmaps/';
+PDFJS.cMapPacked = true;
+
+var mozL10n = document.mozL10n || document.webL10n;
+
+
+// optimised CSS custom property getter/setter
+var CustomStyle = (function CustomStyleClosure() {
+
+  // As noted on: http://www.zachstronaut.com/posts/2009/02/17/
+  //              animate-css-transforms-firefox-webkit.html
+  // in some versions of IE9 it is critical that ms appear in this list
+  // before Moz
+  var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
+  var _cache = {};
+
+  function CustomStyle() {}
+
+  CustomStyle.getProp = function get(propName, element) {
+    // check cache only when no element is given
+    if (arguments.length == 1 && typeof _cache[propName] == 'string') {
+      return _cache[propName];
+    }
+
+    element = element || document.documentElement;
+    var style = element.style, prefixed, uPropName;
+
+    // test standard property first
+    if (typeof style[propName] == 'string') {
+      return (_cache[propName] = propName);
+    }
+
+    // capitalize
+    uPropName = propName.charAt(0).toUpperCase() + propName.slice(1);
+
+    // test vendor specific properties
+    for (var i = 0, l = prefixes.length; i < l; i++) {
+      prefixed = prefixes[i] + uPropName;
+      if (typeof style[prefixed] == 'string') {
+        return (_cache[propName] = prefixed);
+      }
+    }
+
+    //if all fails then set to undefined
+    return (_cache[propName] = 'undefined');
   };
-  var FindStates = {
-    FIND_FOUND: 0,
-    FIND_NOTFOUND: 1,
-    FIND_WRAPPED: 2,
-    FIND_PENDING: 3
+
+  CustomStyle.setProp = function set(propName, element, str) {
+    var prop = this.getProp(propName);
+    if (prop != 'undefined') {
+      element.style[prop] = str;
+    }
   };
 
-  var mozL10n = document.mozL10n || document.webL10n;
+  return CustomStyle;
+})();
 
+function getFileName(url) {
+  var anchor = url.indexOf('#');
+  var query = url.indexOf('?');
+  var end = Math.min(
+    anchor > 0 ? anchor : url.length,
+    query > 0 ? query : url.length);
+  return url.substring(url.lastIndexOf('/', end) + 1, end);
+}
 
-  // optimised CSS custom property getter/setter
-  var CustomStyle = (function CustomStyleClosure() {
+/**
+ * Returns scale factor for the canvas. It makes sense for the HiDPI displays.
+ * @return {Object} The object with horizontal (sx) and vertical (sy)
+                    scales. The scaled property is set to false if scaling is
+                    not required, true otherwise.
+ */
+function getOutputScale(ctx) {
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  var backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+                          ctx.mozBackingStorePixelRatio ||
+                          ctx.msBackingStorePixelRatio ||
+                          ctx.oBackingStorePixelRatio ||
+                          ctx.backingStorePixelRatio || 1;
+  var pixelRatio = devicePixelRatio / backingStoreRatio;
+  return {
+    sx: pixelRatio,
+    sy: pixelRatio,
+    scaled: pixelRatio != 1
+  };
+}
 
-      // As noted on: http://www.zachstronaut.com/posts/2009/02/17/
-      //              animate-css-transforms-firefox-webkit.html
-      // in some versions of IE9 it is critical that ms appear in this list
-      // before Moz
-      var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
-      var _cache = {};
-
-      function CustomStyle() {}
-
-      CustomStyle.getProp = function get(propName, element) {
-        // check cache only when no element is given
-        if (arguments.length == 1 && typeof _cache[propName] == 'string') {
-          return _cache[propName];
-        }
-
-        element = element || document.documentElement;
-        var style = element.style, prefixed, uPropName;
-
-        // test standard property first
-        if (typeof style[propName] == 'string') {
-          return (_cache[propName] = propName);
-        }
-
-        // capitalize
-        uPropName = propName.charAt(0).toUpperCase() + propName.slice(1);
-
-        // test vendor specific properties
-        for (var i = 0, l = prefixes.length; i < l; i++) {
-          prefixed = prefixes[i] + uPropName;
-          if (typeof style[prefixed] == 'string') {
-            return (_cache[propName] = prefixed);
-          }
-        }
-
-        //if all fails then set to undefined
-        return (_cache[propName] = 'undefined');
-      };
-
-      CustomStyle.setProp = function set(propName, element, str) {
-        var prop = this.getProp(propName);
-        if (prop != 'undefined') {
-          element.style[prop] = str;
-        }
-      };
-
-      return CustomStyle;
-    })();
-
-  function getFileName(url) {
-    var anchor = url.indexOf('#');
-    var query = url.indexOf('?');
-    var end = Math.min(
-                       anchor > 0 ? anchor : url.length,
-                       query > 0 ? query : url.length);
-    return url.substring(url.lastIndexOf('/', end) + 1, end);
+/**
+ * Scrolls specified element into view of its parent.
+ * element {Object} The element to be visible.
+ * spot {Object} An object with optional top and left properties,
+ *               specifying the offset from the top left edge.
+ */
+function scrollIntoView(element, spot) {
+  // Assuming offsetParent is available (it's not available when viewer is in
+  // hidden iframe or object). We have to scroll: if the offsetParent is not set
+  // producing the error. See also animationStartedClosure.
+  var parent = element.offsetParent;
+  var offsetY = element.offsetTop + element.clientTop;
+  var offsetX = element.offsetLeft + element.clientLeft;
+  if (!parent) {
+    console.error('offsetParent is not set -- cannot scroll');
+    return;
   }
-
-  /**
-   * Returns scale factor for the canvas. It makes sense for the HiDPI displays.
-   * @return {Object} The object with horizontal (sx) and vertical (sy)
-   scales. The scaled property is set to false if scaling is
-   not required, true otherwise.
-  */
-  function getOutputScale(ctx) {
-    var devicePixelRatio = window.devicePixelRatio || 1;
-    var backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
-    ctx.mozBackingStorePixelRatio ||
-    ctx.msBackingStorePixelRatio ||
-    ctx.oBackingStorePixelRatio ||
-    ctx.backingStorePixelRatio || 1;
-    var pixelRatio = devicePixelRatio / backingStoreRatio;
-    return {
-      sx: pixelRatio,
-        sy: pixelRatio,
-        scaled: pixelRatio != 1
-        };
-  }
-
-  /**
-   * Scrolls specified element into view of its parent.
-   * element {Object} The element to be visible.
-   * spot {Object} An object with optional top and left properties,
-   *               specifying the offset from the top left edge.
-   */
-  function scrollIntoView(element, spot) {
-    // Assuming offsetParent is available (it's not available when viewer is in
-    // hidden iframe or object). We have to scroll: if the offsetParent is not set
-    // producing the error. See also animationStartedClosure.
-    var parent = element.offsetParent;
-    var offsetY = element.offsetTop + element.clientTop;
-    var offsetX = element.offsetLeft + element.clientLeft;
+  while (parent.clientHeight === parent.scrollHeight) {
+    if (parent.dataset._scaleY) {
+      offsetY /= parent.dataset._scaleY;
+      offsetX /= parent.dataset._scaleX;
+    }
+    offsetY += parent.offsetTop;
+    offsetX += parent.offsetLeft;
+    parent = parent.offsetParent;
     if (!parent) {
-      console.error('offsetParent is not set -- cannot scroll');
-      return;
+      return; // no need to scroll
     }
-    while (parent.clientHeight === parent.scrollHeight) {
-      if (parent.dataset._scaleY) {
-        offsetY /= parent.dataset._scaleY;
-        offsetX /= parent.dataset._scaleX;
-      }
-      offsetY += parent.offsetTop;
-      offsetX += parent.offsetLeft;
-      parent = parent.offsetParent;
-      if (!parent) {
-        return; // no need to scroll
+  }
+  if (spot) {
+    if (spot.top !== undefined) {
+      offsetY += spot.top;
+    }
+    if (spot.left !== undefined) {
+      offsetX += spot.left;
+      parent.scrollLeft = offsetX;
+    }
+  }
+  parent.scrollTop = offsetY;
+}
+
+/**
+ * Event handler to suppress context menu.
+ */
+function noContextMenuHandler(e) {
+  e.preventDefault();
+}
+
+/**
+ * Returns the filename or guessed filename from the url (see issue 3455).
+ * url {String} The original PDF location.
+ * @return {String} Guessed PDF file name.
+ */
+function getPDFFileNameFromURL(url) {
+  var reURI = /^(?:([^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
+  //            SCHEME      HOST         1.PATH  2.QUERY   3.REF
+  // Pattern to get last matching NAME.pdf
+  var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
+  var splitURI = reURI.exec(url);
+  var suggestedFilename = reFilename.exec(splitURI[1]) ||
+                           reFilename.exec(splitURI[2]) ||
+                           reFilename.exec(splitURI[3]);
+  if (suggestedFilename) {
+    suggestedFilename = suggestedFilename[0];
+    if (suggestedFilename.indexOf('%') != -1) {
+      // URL-encoded %2Fpath%2Fto%2Ffile.pdf should be file.pdf
+      try {
+        suggestedFilename =
+          reFilename.exec(decodeURIComponent(suggestedFilename))[0];
+      } catch(e) { // Possible (extremely rare) errors:
+        // URIError "Malformed URI", e.g. for "%AA.pdf"
+        // TypeError "null has no properties", e.g. for "%2F.pdf"
       }
     }
-    if (spot) {
-      if (spot.top !== undefined) {
-        offsetY += spot.top;
-      }
-      if (spot.left !== undefined) {
-        offsetX += spot.left;
-        parent.scrollLeft = offsetX;
-      }
-    }
-    parent.scrollTop = offsetY;
+  }
+  return suggestedFilename || 'document.pdf';
+}
+
+var ProgressBar = (function ProgressBarClosure() {
+
+  function clamp(v, min, max) {
+    return Math.min(Math.max(v, min), max);
   }
 
-  /**
-   * Event handler to suppress context menu.
-   */
-  function noContextMenuHandler(e) {
-    e.preventDefault();
+  function ProgressBar(id, opts) {
+
+    // Fetch the sub-elements for later.
+    this.div = document.querySelector(id + ' .progress');
+
+    // Get the loading bar element, so it can be resized to fit the viewer.
+    this.bar = this.div.parentNode;
+
+    // Get options, with sensible defaults.
+    this.height = opts.height || 100;
+    this.width = opts.width || 100;
+    this.units = opts.units || '%';
+
+    // Initialize heights.
+    this.div.style.height = this.height + this.units;
+    this.percent = 0;
   }
 
-  /**
-   * Returns the filename or guessed filename from the url (see issue 3455).
-   * url {String} The original PDF location.
-   * @return {String} Guessed PDF file name.
-   */
-  function getPDFFileNameFromURL(url) {
-    var reURI = /^(?:([^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
-    //            SCHEME      HOST         1.PATH  2.QUERY   3.REF
-    // Pattern to get last matching NAME.pdf
-    var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
-    var splitURI = reURI.exec(url);
-    var suggestedFilename = reFilename.exec(splitURI[1]) ||
-    reFilename.exec(splitURI[2]) ||
-    reFilename.exec(splitURI[3]);
-    if (suggestedFilename) {
-      suggestedFilename = suggestedFilename[0];
-      if (suggestedFilename.indexOf('%') != -1) {
-        // URL-encoded %2Fpath%2Fto%2Ffile.pdf should be file.pdf
-        try {
-          suggestedFilename =
-            reFilename.exec(decodeURIComponent(suggestedFilename))[0];
-        } catch(e) { // Possible (extremely rare) errors:
-          // URIError "Malformed URI", e.g. for "%AA.pdf"
-          // TypeError "null has no properties", e.g. for "%2F.pdf"
-        }
-      }
-    }
-    return suggestedFilename || 'document.pdf';
-  }
+  ProgressBar.prototype = {
 
-  var ProgressBar = (function ProgressBarClosure() {
-
-      function clamp(v, min, max) {
-        return Math.min(Math.max(v, min), max);
-      }
-
-      function ProgressBar(id, opts) {
-
-        // Fetch the sub-elements for later.
-        this.div = document.querySelector(id + ' .progress');
-
-        // Get the loading bar element, so it can be resized to fit the viewer.
-        this.bar = this.div.parentNode;
-
-        // Get options, with sensible defaults.
-        this.height = opts.height || 100;
-        this.width = opts.width || 100;
-        this.units = opts.units || '%';
-
-        // Initialize heights.
-        this.div.style.height = this.height + this.units;
-        this.percent = 0;
-      }
-
-      ProgressBar.prototype = {
-
-        updateBar: function ProgressBar_updateBar() {
-          if (this._indeterminate) {
-            this.div.classList.add('indeterminate');
-            this.div.style.width = this.width + this.units;
-            return;
-          }
-
-          this.div.classList.remove('indeterminate');
-          var progressSize = this.width * this._percent / 100;
-          this.div.style.width = progressSize + this.units;
-        },
-
-        get percent() {
-          return this._percent;
-        },
-
-        set percent(val) {
-          this._indeterminate = isNaN(val);
-          this._percent = clamp(val, 0, 100);
-          this.updateBar();
-        },
-
-        setWidth: function ProgressBar_setWidth(viewer) {
-          if (viewer) {
-            var container = viewer.parentNode;
-            var scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
-            if (scrollbarWidth > 0) {
-              this.bar.setAttribute('style', 'width: calc(100% - ' +
-                                    scrollbarWidth + 'px);');
-            }
-          }
-        },
-
-        hide: function ProgressBar_hide() {
-          this.bar.classList.add('hidden');
-          this.bar.removeAttribute('style');
-        }
-      };
-
-      return ProgressBar;
-    })();
-
-  var Cache = function cacheCache(size) {
-    var data = [];
-    this.push = function cachePush(view) {
-      var i = data.indexOf(view);
-      if (i >= 0) {
-        data.splice(i);
-      }
-      data.push(view);
-      if (data.length > size) {
-        data.shift().destroy();
-      }
-    };
-  };
-
-
-
-
-  var DEFAULT_PREFERENCES = {
-    showPreviousViewOnLoad: true,
-    defaultZoomValue: '',
-    ifAvailableShowOutlineOnLoad: false,
-    enableHandToolOnLoad: false,
-    enableWebGL: false
-  };
-
-
-  /**
-   * Preferences - Utility for storing persistent settings.
-   *   Used for settings that should be applied to all opened documents,
-   *   or every time the viewer is loaded.
-   */
-  var Preferences = {
-    prefs: Object.create(DEFAULT_PREFERENCES),
-    isInitializedPromiseResolved: false,
-    initializedPromise: null,
-
-    /**
-     * Initialize and fetch the current preference values from storage.
-     * @return {Promise} A promise that is resolved when the preferences
-     *                   have been initialized.
-     */
-    initialize: function preferencesInitialize() {
-      return this.initializedPromise =
-      this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
-          this.isInitializedPromiseResolved = true;
-          if (prefObj) {
-            this.prefs = prefObj;
-          }
-        }.bind(this));
-    },
-
-    /**
-     * Stub function for writing preferences to storage.
-     * NOTE: This should be overridden by a build-specific function defined below.
-     * @param {Object} prefObj The preferences that should be written to storage.
-     * @return {Promise} A promise that is resolved when the preference values
-     *                   have been written.
-     */
-    _writeToStorage: function preferences_writeToStorage(prefObj) {
-      return Promise.resolve();
-    },
-
-    /**
-     * Stub function for reading preferences from storage.
-     * NOTE: This should be overridden by a build-specific function defined below.
-     * @param {Object} prefObj The preferences that should be read from storage.
-     * @return {Promise} A promise that is resolved with an {Object} containing
-     *                   the preferences that have been read.
-     */
-    _readFromStorage: function preferences_readFromStorage(prefObj) {
-      return Promise.resolve();
-    },
-
-    /**
-     * Reset the preferences to their default values and update storage.
-     * @return {Promise} A promise that is resolved when the preference values
-     *                   have been reset.
-     */
-    reset: function preferencesReset() {
-      return this.initializedPromise.then(function() {
-          this.prefs = Object.create(DEFAULT_PREFERENCES);
-          return this._writeToStorage(DEFAULT_PREFERENCES);
-        }.bind(this));
-    },
-
-    /**
-     * Replace the current preference values with the ones from storage.
-     * @return {Promise} A promise that is resolved when the preference values
-     *                   have been updated.
-     */
-    reload: function preferencesReload() {
-      return this.initializedPromise.then(function () {
-          this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
-              if (prefObj) {
-                this.prefs = prefObj;
-              }
-            }.bind(this));
-        }.bind(this));
-    },
-
-    /**
-     * Set the value of a preference.
-     * @param {string} name The name of the preference that should be changed.
-     * @param {boolean|number|string} value The new value of the preference.
-     * @return {Promise} A promise that is resolved when the value has been set,
-     *                   provided that the preference exists and the types match.
-     */
-    set: function preferencesSet(name, value) {
-      return this.initializedPromise.then(function () {
-          if (DEFAULT_PREFERENCES[name] === undefined) {
-            throw new Error('preferencesSet: \'' + name + '\' is undefined.');
-          } else if (value === undefined) {
-            throw new Error('preferencesSet: no value is specified.');
-          }
-          var valueType = typeof value;
-          var defaultType = typeof DEFAULT_PREFERENCES[name];
-
-          if (valueType !== defaultType) {
-            if (valueType === 'number' && defaultType === 'string') {
-              value = value.toString();
-            } else {
-              throw new Error('Preferences_set: \'' + value + '\' is a \"' +
-                              valueType + '\", expected \"' + defaultType + '\".');
-            }
-          } else {
-            if (valueType === 'number' && (value | 0) !== value) {
-              throw new Error('Preferences_set: \'' + value +
-                              '\' must be an \"integer\".');
-            }
-          }
-          this.prefs[name] = value;
-          return this._writeToStorage(this.prefs);
-        }.bind(this));
-    },
-
-    /**
-     * Get the value of a preference.
-     * @param {string} name The name of the preference whose value is requested.
-     * @return {Promise} A promise that is resolved with a {boolean|number|string}
-     *                   containing the value of the preference.
-     */
-    get: function preferencesGet(name) {
-      return this.initializedPromise.then(function () {
-          var defaultValue = DEFAULT_PREFERENCES[name];
-
-          if (defaultValue === undefined) {
-            throw new Error('preferencesGet: \'' + name + '\' is undefined.');
-          } else {
-            var prefValue = this.prefs[name];
-
-            if (prefValue !== undefined) {
-              return prefValue;
-            }
-          }
-          return defaultValue;
-        }.bind(this));
-    }
-  };
-
-
-  Preferences._writeToStorage = function (prefObj) {
-    return new Promise(function (resolve) {
-        localStorage.setItem('pdfjs.preferences', JSON.stringify(prefObj));
-        resolve();
-      });
-  };
-
-  Preferences._readFromStorage = function (prefObj) {
-    return new Promise(function (resolve) {
-        var readPrefs = JSON.parse(localStorage.getItem('pdfjs.preferences'));
-        resolve(readPrefs);
-      });
-  };
-
-
-  (function mozPrintCallbackPolyfillClosure() {
-    if ('mozPrintCallback' in document.createElement('canvas')) {
-      return;
-    }
-    // Cause positive result on feature-detection:
-    HTMLCanvasElement.prototype.mozPrintCallback = undefined;
-
-    var canvases;   // During print task: non-live NodeList of <canvas> elements
-    var index;      // Index of <canvas> element that is being processed
-
-    var print = window.print;
-    window.print = function print() {
-      if (canvases) {
-        console.warn('Ignored window.print() because of a pending print job.');
+    updateBar: function ProgressBar_updateBar() {
+      if (this._indeterminate) {
+        this.div.classList.add('indeterminate');
+        this.div.style.width = this.width + this.units;
         return;
       }
-      try {
-        dispatchEvent('beforeprint');
-      } finally {
-        canvases = document.querySelectorAll('canvas');
-        index = -1;
+
+      this.div.classList.remove('indeterminate');
+      var progressSize = this.width * this._percent / 100;
+      this.div.style.width = progressSize + this.units;
+    },
+
+    get percent() {
+      return this._percent;
+    },
+
+    set percent(val) {
+      this._indeterminate = isNaN(val);
+      this._percent = clamp(val, 0, 100);
+      this.updateBar();
+    },
+
+    setWidth: function ProgressBar_setWidth(viewer) {
+      if (viewer) {
+        var container = viewer.parentNode;
+        var scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
+        if (scrollbarWidth > 0) {
+          this.bar.setAttribute('style', 'width: calc(100% - ' +
+                                         scrollbarWidth + 'px);');
+        }
+      }
+    },
+
+    hide: function ProgressBar_hide() {
+      this.bar.classList.add('hidden');
+      this.bar.removeAttribute('style');
+    }
+  };
+
+  return ProgressBar;
+})();
+
+var Cache = function cacheCache(size) {
+  var data = [];
+  this.push = function cachePush(view) {
+    var i = data.indexOf(view);
+    if (i >= 0) {
+      data.splice(i);
+    }
+    data.push(view);
+    if (data.length > size) {
+      data.shift().destroy();
+    }
+  };
+};
+
+
+
+
+var DEFAULT_PREFERENCES = {
+  showPreviousViewOnLoad: true,
+  defaultZoomValue: '',
+  ifAvailableShowOutlineOnLoad: false,
+  enableHandToolOnLoad: false,
+  enableWebGL: false
+};
+
+
+/**
+ * Preferences - Utility for storing persistent settings.
+ *   Used for settings that should be applied to all opened documents,
+ *   or every time the viewer is loaded.
+ */
+var Preferences = {
+  prefs: Object.create(DEFAULT_PREFERENCES),
+  isInitializedPromiseResolved: false,
+  initializedPromise: null,
+
+  /**
+   * Initialize and fetch the current preference values from storage.
+   * @return {Promise} A promise that is resolved when the preferences
+   *                   have been initialized.
+   */
+  initialize: function preferencesInitialize() {
+    return this.initializedPromise =
+        this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
+      this.isInitializedPromiseResolved = true;
+      if (prefObj) {
+        this.prefs = prefObj;
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Stub function for writing preferences to storage.
+   * NOTE: This should be overridden by a build-specific function defined below.
+   * @param {Object} prefObj The preferences that should be written to storage.
+   * @return {Promise} A promise that is resolved when the preference values
+   *                   have been written.
+   */
+  _writeToStorage: function preferences_writeToStorage(prefObj) {
+    return Promise.resolve();
+  },
+
+  /**
+   * Stub function for reading preferences from storage.
+   * NOTE: This should be overridden by a build-specific function defined below.
+   * @param {Object} prefObj The preferences that should be read from storage.
+   * @return {Promise} A promise that is resolved with an {Object} containing
+   *                   the preferences that have been read.
+   */
+  _readFromStorage: function preferences_readFromStorage(prefObj) {
+    return Promise.resolve();
+  },
+
+  /**
+   * Reset the preferences to their default values and update storage.
+   * @return {Promise} A promise that is resolved when the preference values
+   *                   have been reset.
+   */
+  reset: function preferencesReset() {
+    return this.initializedPromise.then(function() {
+      this.prefs = Object.create(DEFAULT_PREFERENCES);
+      return this._writeToStorage(DEFAULT_PREFERENCES);
+    }.bind(this));
+  },
+
+  /**
+   * Replace the current preference values with the ones from storage.
+   * @return {Promise} A promise that is resolved when the preference values
+   *                   have been updated.
+   */
+  reload: function preferencesReload() {
+    return this.initializedPromise.then(function () {
+      this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
+        if (prefObj) {
+          this.prefs = prefObj;
+        }
+      }.bind(this));
+    }.bind(this));
+  },
+
+  /**
+   * Set the value of a preference.
+   * @param {string} name The name of the preference that should be changed.
+   * @param {boolean|number|string} value The new value of the preference.
+   * @return {Promise} A promise that is resolved when the value has been set,
+   *                   provided that the preference exists and the types match.
+   */
+  set: function preferencesSet(name, value) {
+    return this.initializedPromise.then(function () {
+      if (DEFAULT_PREFERENCES[name] === undefined) {
+        throw new Error('preferencesSet: \'' + name + '\' is undefined.');
+      } else if (value === undefined) {
+        throw new Error('preferencesSet: no value is specified.');
+      }
+      var valueType = typeof value;
+      var defaultType = typeof DEFAULT_PREFERENCES[name];
+
+      if (valueType !== defaultType) {
+        if (valueType === 'number' && defaultType === 'string') {
+          value = value.toString();
+        } else {
+          throw new Error('Preferences_set: \'' + value + '\' is a \"' +
+                          valueType + '\", expected \"' + defaultType + '\".');
+        }
+      } else {
+        if (valueType === 'number' && (value | 0) !== value) {
+          throw new Error('Preferences_set: \'' + value +
+                          '\' must be an \"integer\".');
+        }
+      }
+      this.prefs[name] = value;
+      return this._writeToStorage(this.prefs);
+    }.bind(this));
+  },
+
+  /**
+   * Get the value of a preference.
+   * @param {string} name The name of the preference whose value is requested.
+   * @return {Promise} A promise that is resolved with a {boolean|number|string}
+   *                   containing the value of the preference.
+   */
+  get: function preferencesGet(name) {
+    return this.initializedPromise.then(function () {
+      var defaultValue = DEFAULT_PREFERENCES[name];
+
+      if (defaultValue === undefined) {
+        throw new Error('preferencesGet: \'' + name + '\' is undefined.');
+      } else {
+        var prefValue = this.prefs[name];
+
+        if (prefValue !== undefined) {
+          return prefValue;
+        }
+      }
+      return defaultValue;
+    }.bind(this));
+  }
+};
+
+
+Preferences._writeToStorage = function (prefObj) {
+  return new Promise(function (resolve) {
+    localStorage.setItem('pdfjs.preferences', JSON.stringify(prefObj));
+    resolve();
+  });
+};
+
+Preferences._readFromStorage = function (prefObj) {
+  return new Promise(function (resolve) {
+    var readPrefs = JSON.parse(localStorage.getItem('pdfjs.preferences'));
+    resolve(readPrefs);
+  });
+};
+
+
+(function mozPrintCallbackPolyfillClosure() {
+  if ('mozPrintCallback' in document.createElement('canvas')) {
+    return;
+  }
+  // Cause positive result on feature-detection:
+  HTMLCanvasElement.prototype.mozPrintCallback = undefined;
+
+  var canvases;   // During print task: non-live NodeList of <canvas> elements
+  var index;      // Index of <canvas> element that is being processed
+
+  var print = window.print;
+  window.print = function print() {
+    if (canvases) {
+      console.warn('Ignored window.print() because of a pending print job.');
+      return;
+    }
+    try {
+      dispatchEvent('beforeprint');
+    } finally {
+      canvases = document.querySelectorAll('canvas');
+      index = -1;
+      next();
+    }
+  };
+
+  function dispatchEvent(eventType) {
+    var event = document.createEvent('CustomEvent');
+    event.initCustomEvent(eventType, false, false, 'custom');
+    window.dispatchEvent(event);
+  }
+
+  function next() {
+    if (!canvases) {
+      return; // Print task cancelled by user (state reset in abort())
+    }
+
+    renderProgress();
+    if (++index < canvases.length) {
+      var canvas = canvases[index];
+      if (typeof canvas.mozPrintCallback === 'function') {
+        canvas.mozPrintCallback({
+          context: canvas.getContext('2d'),
+          abort: abort,
+          done: next
+        });
+      } else {
         next();
       }
-    };
-
-    function dispatchEvent(eventType) {
-      var event = document.createEvent('CustomEvent');
-      event.initCustomEvent(eventType, false, false, 'custom');
-      window.dispatchEvent(event);
-    }
-
-    function next() {
-      if (!canvases) {
-        return; // Print task cancelled by user (state reset in abort())
-      }
-
+    } else {
       renderProgress();
-      if (++index < canvases.length) {
-        var canvas = canvases[index];
-        if (typeof canvas.mozPrintCallback === 'function') {
-          canvas.mozPrintCallback({
-              context: canvas.getContext('2d'),
-                abort: abort,
-                done: next
-                });
-        } else {
-          next();
-        }
+      print.call(window);
+      setTimeout(abort, 20); // Tidy-up
+    }
+  }
+
+  function abort() {
+    if (canvases) {
+      canvases = null;
+      renderProgress();
+      dispatchEvent('afterprint');
+    }
+  }
+
+  function renderProgress() {
+    var progressContainer = document.getElementById('mozPrintCallback-shim');
+    if (canvases) {
+      var progress = Math.round(100 * index / canvases.length);
+      var progressBar = progressContainer.querySelector('progress');
+      var progressPerc = progressContainer.querySelector('.relative-progress');
+      progressBar.value = progress;
+      progressPerc.textContent = progress + '%';
+      progressContainer.removeAttribute('hidden');
+      progressContainer.onclick = abort;
+    } else {
+      progressContainer.setAttribute('hidden', '');
+    }
+  }
+
+  var hasAttachEvent = !!document.attachEvent;
+
+  window.addEventListener('keydown', function(event) {
+    // Intercept Cmd/Ctrl + P in all browsers.
+    // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
+    if (event.keyCode === 80/*P*/ && (event.ctrlKey || event.metaKey) &&
+        !event.altKey && (!event.shiftKey || window.chrome || window.opera)) {
+      window.print();
+      if (hasAttachEvent) {
+        // Only attachEvent can cancel Ctrl + P dialog in IE <=10
+        // attachEvent is gone in IE11, so the dialog will re-appear in IE11.
+        return;
+      }
+      event.preventDefault();
+      if (event.stopImmediatePropagation) {
+        event.stopImmediatePropagation();
       } else {
-        renderProgress();
-        print.call(window);
-        setTimeout(abort, 20); // Tidy-up
+        event.stopPropagation();
       }
+      return;
+    }
+    if (event.keyCode === 27 && canvases) { // Esc
+      abort();
+    }
+  }, true);
+  if (hasAttachEvent) {
+    document.attachEvent('onkeydown', function(event) {
+      event = event || window.event;
+      if (event.keyCode === 80/*P*/ && event.ctrlKey) {
+        event.keyCode = 0;
+        return false;
+      }
+    });
+  }
+
+  if ('onbeforeprint' in window) {
+    // Do not propagate before/afterprint events when they are not triggered
+    // from within this polyfill. (FF/IE).
+    var stopPropagationIfNeeded = function(event) {
+      if (event.detail !== 'custom' && event.stopImmediatePropagation) {
+        event.stopImmediatePropagation();
+      }
+    };
+    window.addEventListener('beforeprint', stopPropagationIfNeeded, false);
+    window.addEventListener('afterprint', stopPropagationIfNeeded, false);
+  }
+})();
+
+
+
+var DownloadManager = (function DownloadManagerClosure() {
+
+  function download(blobUrl, filename) {
+    var a = document.createElement('a');
+    if (a.click) {
+      // Use a.click() if available. Otherwise, Chrome might show
+      // "Unsafe JavaScript attempt to initiate a navigation change
+      //  for frame with URL" and not open the PDF at all.
+      // Supported by (not mentioned = untested):
+      // - Firefox 6 - 19 (4- does not support a.click, 5 ignores a.click)
+      // - Chrome 19 - 26 (18- does not support a.click)
+      // - Opera 9 - 12.15
+      // - Internet Explorer 6 - 10
+      // - Safari 6 (5.1- does not support a.click)
+      a.href = blobUrl;
+      a.target = '_parent';
+      // Use a.download if available. This increases the likelihood that
+      // the file is downloaded instead of opened by another PDF plugin.
+      if ('download' in a) {
+        a.download = filename;
+      }
+      // <a> must be in the document for IE and recent Firefox versions.
+      // (otherwise .click() is ignored)
+      (document.body || document.documentElement).appendChild(a);
+      a.click();
+      a.parentNode.removeChild(a);
+    } else {
+      if (window.top === window &&
+          blobUrl.split('#')[0] === window.location.href.split('#')[0]) {
+        // If _parent == self, then opening an identical URL with different
+        // location hash will only cause a navigation, not a download.
+        var padCharacter = blobUrl.indexOf('?') === -1 ? '?' : '&';
+        blobUrl = blobUrl.replace(/#|$/, padCharacter + '$&');
+      }
+      window.open(blobUrl, '_parent');
+    }
+  }
+
+  function DownloadManager() {}
+
+  DownloadManager.prototype = {
+    downloadUrl: function DownloadManager_downloadUrl(url, filename) {
+      if (!PDFJS.isValidUrl(url, true)) {
+        return; // restricted/invalid URL
+      }
+
+      download(url + '#pdfjs.action=download', filename);
+    },
+
+    download: function DownloadManager_download(blob, url, filename) {
+      if (!URL) {
+        // URL.createObjectURL is not supported
+        this.downloadUrl(url, filename);
+        return;
+      }
+
+      if (navigator.msSaveBlob) {
+        // IE10 / IE11
+        if (!navigator.msSaveBlob(blob, filename)) {
+          this.downloadUrl(url, filename);
+        }
+        return;
+      }
+
+      var blobUrl = URL.createObjectURL(blob);
+      download(blobUrl, filename);
+    }
+  };
+
+  return DownloadManager;
+})();
+
+
+
+
+var cache = new Cache(CACHE_SIZE);
+var currentPageNumber = 1;
+
+
+/**
+ * View History - This is a utility for saving various view parameters for
+ *                recently opened files.
+ *
+ * The way that the view parameters are stored depends on how PDF.js is built,
+ * for 'node make <flag>' the following cases exist:
+ *  - FIREFOX or MOZCENTRAL - uses sessionStorage.
+ *  - B2G                   - uses asyncStorage.
+ *  - GENERIC or CHROME     - uses localStorage, if it is available.
+ */
+var ViewHistory = (function ViewHistoryClosure() {
+  function ViewHistory(fingerprint) {
+    this.fingerprint = fingerprint;
+    var initializedPromiseResolve;
+    this.isInitializedPromiseResolved = false;
+    this.initializedPromise = new Promise(function (resolve) {
+      initializedPromiseResolve = resolve;
+    });
+
+    var resolvePromise = (function ViewHistoryResolvePromise(db) {
+      this.isInitializedPromiseResolved = true;
+      this.initialize(db || '{}');
+      initializedPromiseResolve();
+    }).bind(this);
+
+
+
+    resolvePromise(localStorage.getItem('database'));
+  }
+
+  ViewHistory.prototype = {
+    initialize: function ViewHistory_initialize(database) {
+      database = JSON.parse(database);
+      if (!('files' in database)) {
+        database.files = [];
+      }
+      if (database.files.length >= VIEW_HISTORY_MEMORY) {
+        database.files.shift();
+      }
+      var index;
+      for (var i = 0, length = database.files.length; i < length; i++) {
+        var branch = database.files[i];
+        if (branch.fingerprint === this.fingerprint) {
+          index = i;
+          break;
+        }
+      }
+      if (typeof index !== 'number') {
+        index = database.files.push({fingerprint: this.fingerprint}) - 1;
+      }
+      this.file = database.files[index];
+      this.database = database;
+    },
+
+    set: function ViewHistory_set(name, val) {
+      if (!this.isInitializedPromiseResolved) {
+        return;
+      }
+      var file = this.file;
+      file[name] = val;
+      var database = JSON.stringify(this.database);
+
+
+
+      localStorage.setItem('database', database);
+    },
+
+    get: function ViewHistory_get(name, defaultValue) {
+      if (!this.isInitializedPromiseResolved) {
+        return defaultValue;
+      }
+      return this.file[name] || defaultValue;
+    }
+  };
+
+  return ViewHistory;
+})();
+
+
+/**
+ * Creates a "search bar" given set of DOM elements
+ * that act as controls for searching, or for setting
+ * search preferences in the UI. This object also sets
+ * up the appropriate events for the controls. Actual
+ * searching is done by PDFFindController
+ */
+var PDFFindBar = {
+  opened: false,
+  bar: null,
+  toggleButton: null,
+  findField: null,
+  highlightAll: null,
+  caseSensitive: null,
+  findMsg: null,
+  findStatusIcon: null,
+  findPreviousButton: null,
+  findNextButton: null,
+
+  initialize: function(options) {
+    if(typeof PDFFindController === 'undefined' || PDFFindController === null) {
+      throw 'PDFFindBar cannot be initialized ' +
+            'without a PDFFindController instance.';
     }
 
-    function abort() {
-      if (canvases) {
-        canvases = null;
-        renderProgress();
-        dispatchEvent('afterprint');
+    this.bar = options.bar;
+    this.toggleButton = options.toggleButton;
+    this.findField = options.findField;
+    this.highlightAll = options.highlightAllCheckbox;
+    this.caseSensitive = options.caseSensitiveCheckbox;
+    this.findMsg = options.findMsg;
+    this.findStatusIcon = options.findStatusIcon;
+    this.findPreviousButton = options.findPreviousButton;
+    this.findNextButton = options.findNextButton;
+
+    var self = this;
+    this.toggleButton.addEventListener('click', function() {
+      self.toggle();
+    });
+
+    this.findField.addEventListener('input', function() {
+      self.dispatchEvent('');
+    });
+
+    this.bar.addEventListener('keydown', function(evt) {
+      switch (evt.keyCode) {
+        case 13: // Enter
+          if (evt.target === self.findField) {
+            self.dispatchEvent('again', evt.shiftKey);
+          }
+          break;
+        case 27: // Escape
+          self.close();
+          break;
       }
-    }
+    });
 
-    function renderProgress() {
-      var progressContainer = document.getElementById('mozPrintCallback-shim');
-      if (canvases) {
-        var progress = Math.round(100 * index / canvases.length);
-        var progressBar = progressContainer.querySelector('progress');
-        var progressPerc = progressContainer.querySelector('.relative-progress');
-        progressBar.value = progress;
-        progressPerc.textContent = progress + '%';
-        progressContainer.removeAttribute('hidden');
-        progressContainer.onclick = abort;
-      } else {
-        progressContainer.setAttribute('hidden', '');
-      }
-    }
-
-    var hasAttachEvent = !!document.attachEvent;
-
-    window.addEventListener('keydown', function(event) {
-        // Intercept Cmd/Ctrl + P in all browsers.
-        // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
-        if (event.keyCode === 80/*P*/ && (event.ctrlKey || event.metaKey) &&
-            !event.altKey && (!event.shiftKey || window.chrome || window.opera)) {
-          window.print();
-          if (hasAttachEvent) {
-            // Only attachEvent can cancel Ctrl + P dialog in IE <=10
-            // attachEvent is gone in IE11, so the dialog will re-appear in IE11.
-            return;
-          }
-          event.preventDefault();
-          if (event.stopImmediatePropagation) {
-            event.stopImmediatePropagation();
-          } else {
-            event.stopPropagation();
-          }
-          return;
-        }
-        if (event.keyCode === 27 && canvases) { // Esc
-          abort();
-        }
-      }, true);
-    if (hasAttachEvent) {
-      document.attachEvent('onkeydown', function(event) {
-          event = event || window.event;
-          if (event.keyCode === 80/*P*/ && event.ctrlKey) {
-            event.keyCode = 0;
-            return false;
-          }
-        });
-    }
-
-    if ('onbeforeprint' in window) {
-      // Do not propagate before/afterprint events when they are not triggered
-      // from within this polyfill. (FF/IE).
-      var stopPropagationIfNeeded = function(event) {
-        if (event.detail !== 'custom' && event.stopImmediatePropagation) {
-          event.stopImmediatePropagation();
-        }
-      };
-      window.addEventListener('beforeprint', stopPropagationIfNeeded, false);
-      window.addEventListener('afterprint', stopPropagationIfNeeded, false);
-    }
-  })();
-
-
-
-  var DownloadManager = (function DownloadManagerClosure() {
-
-      function download(blobUrl, filename) {
-        var a = document.createElement('a');
-        if (a.click) {
-          // Use a.click() if available. Otherwise, Chrome might show
-          // "Unsafe JavaScript attempt to initiate a navigation change
-          //  for frame with URL" and not open the PDF at all.
-          // Supported by (not mentioned = untested):
-          // - Firefox 6 - 19 (4- does not support a.click, 5 ignores a.click)
-          // - Chrome 19 - 26 (18- does not support a.click)
-          // - Opera 9 - 12.15
-          // - Internet Explorer 6 - 10
-          // - Safari 6 (5.1- does not support a.click)
-          a.href = blobUrl;
-          a.target = '_parent';
-          // Use a.download if available. This increases the likelihood that
-          // the file is downloaded instead of opened by another PDF plugin.
-          if ('download' in a) {
-            a.download = filename;
-          }
-          // <a> must be in the document for IE and recent Firefox versions.
-          // (otherwise .click() is ignored)
-          (document.body || document.documentElement).appendChild(a);
-          a.click();
-          a.parentNode.removeChild(a);
-        } else {
-          if (window.top === window &&
-              blobUrl.split('#')[0] === window.location.href.split('#')[0]) {
-            // If _parent == self, then opening an identical URL with different
-            // location hash will only cause a navigation, not a download.
-            var padCharacter = blobUrl.indexOf('?') === -1 ? '?' : '&';
-            blobUrl = blobUrl.replace(/#|$/, padCharacter + '$&');
-          }
-          window.open(blobUrl, '_parent');
-        }
-      }
-
-      function DownloadManager() {}
-
-      DownloadManager.prototype = {
-        downloadUrl: function DownloadManager_downloadUrl(url, filename) {
-          if (!PDFJS.isValidUrl(url, true)) {
-            return; // restricted/invalid URL
-          }
-
-          download(url + '#pdfjs.action=download', filename);
-        },
-
-        download: function DownloadManager_download(blob, url, filename) {
-          if (!URL) {
-            // URL.createObjectURL is not supported
-            this.downloadUrl(url, filename);
-            return;
-          }
-
-          if (navigator.msSaveBlob) {
-            // IE10 / IE11
-            if (!navigator.msSaveBlob(blob, filename)) {
-              this.downloadUrl(url, filename);
-            }
-            return;
-          }
-
-          var blobUrl = URL.createObjectURL(blob);
-          download(blobUrl, filename);
-        }
-      };
-
-      return DownloadManager;
-    })();
-
-
-
-
-  var cache = new Cache(CACHE_SIZE);
-  var currentPageNumber = 1;
-
-
-  /**
-   * View History - This is a utility for saving various view parameters for
-   *                recently opened files.
-   *
-   * The way that the view parameters are stored depends on how PDF.js is built,
-   * for 'node make <flag>' the following cases exist:
-   *  - FIREFOX or MOZCENTRAL - uses sessionStorage.
-   *  - B2G                   - uses asyncStorage.
-   *  - GENERIC or CHROME     - uses localStorage, if it is available.
-   */
-  var ViewHistory = (function ViewHistoryClosure() {
-      function ViewHistory(fingerprint) {
-        this.fingerprint = fingerprint;
-        var initializedPromiseResolve;
-        this.isInitializedPromiseResolved = false;
-        this.initializedPromise = new Promise(function (resolve) {
-            initializedPromiseResolve = resolve;
-          });
-
-        var resolvePromise = (function ViewHistoryResolvePromise(db) {
-            this.isInitializedPromiseResolved = true;
-            this.initialize(db || '{}');
-            initializedPromiseResolve();
-          }).bind(this);
-
-
-
-        resolvePromise(localStorage.getItem('database'));
-      }
-
-      ViewHistory.prototype = {
-        initialize: function ViewHistory_initialize(database) {
-          database = JSON.parse(database);
-          if (!('files' in database)) {
-            database.files = [];
-          }
-          if (database.files.length >= VIEW_HISTORY_MEMORY) {
-            database.files.shift();
-          }
-          var index;
-          for (var i = 0, length = database.files.length; i < length; i++) {
-            var branch = database.files[i];
-            if (branch.fingerprint === this.fingerprint) {
-              index = i;
-              break;
-            }
-          }
-          if (typeof index !== 'number') {
-            index = database.files.push({fingerprint: this.fingerprint}) - 1;
-          }
-          this.file = database.files[index];
-          this.database = database;
-        },
-
-        set: function ViewHistory_set(name, val) {
-          if (!this.isInitializedPromiseResolved) {
-            return;
-          }
-          var file = this.file;
-          file[name] = val;
-          var database = JSON.stringify(this.database);
-
-
-
-          localStorage.setItem('database', database);
-        },
-
-        get: function ViewHistory_get(name, defaultValue) {
-          if (!this.isInitializedPromiseResolved) {
-            return defaultValue;
-          }
-          return this.file[name] || defaultValue;
-        }
-      };
-
-      return ViewHistory;
-    })();
-
-
-  /**
-   * Creates a "search bar" given set of DOM elements
-   * that act as controls for searching, or for setting
-   * search preferences in the UI. This object also sets
-   * up the appropriate events for the controls. Actual
-   * searching is done by PDFFindController
-   */
-  var PDFFindBar = {
-    opened: false,
-    bar: null,
-    toggleButton: null,
-    findField: null,
-    highlightAll: null,
-    caseSensitive: null,
-    findMsg: null,
-    findStatusIcon: null,
-    findPreviousButton: null,
-    findNextButton: null,
-
-    initialize: function(options) {
-      if(typeof PDFFindController === 'undefined' || PDFFindController === null) {
-        throw 'PDFFindBar cannot be initialized ' +
-        'without a PDFFindController instance.';
-      }
-
-      this.bar = options.bar;
-      this.toggleButton = options.toggleButton;
-      this.findField = options.findField;
-      this.highlightAll = options.highlightAllCheckbox;
-      this.caseSensitive = options.caseSensitiveCheckbox;
-      this.findMsg = options.findMsg;
-      this.findStatusIcon = options.findStatusIcon;
-      this.findPreviousButton = options.findPreviousButton;
-      this.findNextButton = options.findNextButton;
-
-      var self = this;
-      this.toggleButton.addEventListener('click', function() {
-          self.toggle();
-        });
-
-      this.findField.addEventListener('input', function() {
-          self.dispatchEvent('');
-        });
-
-      this.bar.addEventListener('keydown', function(evt) {
-          switch (evt.keyCode) {
-          case 13: // Enter
-            if (evt.target === self.findField) {
-              self.dispatchEvent('again', evt.shiftKey);
-            }
-            break;
-          case 27: // Escape
-            self.close();
-            break;
-          }
-        });
-
-      this.findPreviousButton.addEventListener('click',
-                                               function() { self.dispatchEvent('again', true); }
-                                               );
+    this.findPreviousButton.addEventListener('click',
+      function() { self.dispatchEvent('again', true); }
+    );
 
     this.findNextButton.addEventListener('click', function() {
       self.dispatchEvent('again', false);
@@ -3343,7 +3366,6 @@ var PDFView = {
               }
             });
         }
-					_pdf_ready_callback()
       });
     });
 
@@ -5735,4 +5757,5 @@ window.addEventListener('afterprint', function afterPrint(evt) {
     });
   });
 })();
-}
+
+

@@ -1,7 +1,7 @@
 config =
   port:8005
   defaultPathname:"/index.html"
-  staticPath:"../local"
+  staticPath:"../static"
   Expires:
     fileMatch: /|png|jpg|gif|css|js|html|ogg|mp3|/ig
     maxAge: 60 * 60 * 24 * 365

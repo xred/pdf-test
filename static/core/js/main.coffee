@@ -31,8 +31,8 @@ class App extends Suzaku.EventEmitter
     am = new Suzaku.ApiManager
     am.setPath ""
     tm = new Suzaku.TemplateManager
-    tm.setPath "templates/"
-    tm.use "full-comment-item","rect-mark"
+    tm.setPath "/static/core/templates/"
+    tm.use "comments-item","single-comment-item","rect-mark"
     tm.start (tpls)=>
       window.tpls = tpls
       @start()
@@ -41,52 +41,37 @@ class App extends Suzaku.EventEmitter
     for p in pages = $(".page")
       @pages.push(new Page(this,p))
     @rightSection = new RightSection this
-    $("#new-comment").on "click",=>
+    $("#newComment").on "click",=>
+      $("#newComment").addClass "toggled"
       @newComment()
   newComment:()->
     @emit "newComment"
-  confirmNewComment:(page)->
+    @rightSection.showNewCommentHint()
+  newCommentConfirm:(page)->
     @emit "newComment:confirm"
-    page.confirmNewComment()
+    page.newCommentConfirm()
     success = (content)=>
-      page.completeNewComment()
-      @addNewComment page,content
+      console.log content
+      if content.replace(" ","").length is "0"
+        alert "Error: Content is Empty"
+      @newCommentSuccessed page,content
     fail = =>
-      page.completeNewComment()
-    @rightSection.initEditPage null,success,fail
-  addNewComment:(targetPage,content)->
-    #add comment
+      @newCommentCanceled page
+    @rightSection.hideNewCommentHint()
+    @rightSection.showEditPage "newComment",null,success,fail
+  newCommentSuccessed:(page,content)->
+    page.newCommentCompleted()
+    $("#newComment").removeClass "toggled"
     console.log "new comment page:",targetPage,"content:",content
     targetPage.initUserMarks()
+  newCommentCanceled:(page)->
+    if page then page.newCommentCompleted()
+    else for p in @pages
+      p.newCommentCompleted()
+    $("#newComment").removeClass "toggled"
   initUserMarks:->
     for page in @pages
       page.initUserMarks
-
-class RightSection extends Suzaku.Widget
-  constructor:(app)->
-    super "#right-section"
-    for i in [1..5]
-      item = new FullCommentItem()
-      item.appendTo @UI['comments-wrapper']
-    @initCommentPage()
-  initCommentPage:->
-    @UI['edit-page'].J.hide()
-    @UI['comment-page'].J.fadeIn "fast"
-  initEditPage:(inputData,success,fail)->
-    @UI['edit-page'].J.fadeIn "fast"
-    @UI['comment-page'].J.hide()
-    CKEDITOR.instances.editPageEditor.setData(inputData)
-    @UI['edit-accept-btn'].onclick = =>
-      content = CKEDITOR.instances.editPageEditor.getData()
-      success content
-      @initCommentPage()
-    @UI['edit-cancel-btn'].onclick = =>
-      fail()
-      @initCommentPage()
-        
-class FullCommentItem extends Suzaku.Widget
-  constructor:(data)->
-    super window.tpls['full-comment-item']
 
 class RectMark extends Suzaku.Widget
   constructor:(type="normal")->
@@ -128,6 +113,7 @@ class Page extends Suzaku.Widget
     @dom.onmousemove = null
   newCommentActive:->
     @dom.onmousedown = (evt)=>
+      if @tempRectMark then return false
       evt.preventDefault()
       @textLayerJ = @J.find('.textLayer')
       r = @textLayerJ[0].getBoundingClientRect()
@@ -141,7 +127,7 @@ class Page extends Suzaku.Widget
       return false if not @mouseStartPos
       @mouseStartPos = null
       @clearListeners()
-      @app.confirmNewComment this
+      @app.newCommentConfirm this
     @dom.onmousemove = (evt)=>
       return false if not @mouseStartPos
       r = @textLayerJ[0].getBoundingClientRect()
@@ -155,7 +141,7 @@ class Page extends Suzaku.Widget
       width = Math.abs(x - sp.x)
       height = Math.abs(y - sp.y)
       @tempRectMark.J.css left:left,top:top,width:width,height:height
-  confirmNewComment:->
+  newCommentConfirm:->
     action = "none"
     defaultInfo = @tempRectMark.getInfo()
     @tempRectMark.on "drag",(x,y)=>
@@ -164,12 +150,12 @@ class Page extends Suzaku.Widget
     @tempRectMark.on "resize",(x,y)=>
       @mouseStartPos = x:x,y:y
       action = "resize"
-    window.globalMouseListener.on "mouseup","confirmNewComment",(evt)=>
+    window.globalMouseListener.on "mouseup","newCommentConfirm",(evt)=>
       return false if not @mouseStartPos
       action = "none"
       @mouseStartPos = null
       defaultInfo = @tempRectMark.getInfo()
-    window.globalMouseListener.on "mousemove","confirmNewComment",(evt)=>
+    window.globalMouseListener.on "mousemove","newCommentConfirm",(evt)=>
       return false if not @mouseStartPos
       dx = evt.clientX - @mouseStartPos.x
       dy = evt.clientY - @mouseStartPos.y
@@ -183,9 +169,10 @@ class Page extends Suzaku.Widget
           if height < 5 then height = 5
           @tempRectMark.J.css width:width,height:height
         else console.log "error status",action
-  completeNewComment:->
-    window.globalMouseListener.off "mouseup","confirmNewComment"
-    window.globalMouseListener.off "mousemove","confirmNewComment"
+  newCommentCompleted:->
+    return false if not @tempRectMark
+    window.globalMouseListener.off "mouseup","newCommentConfirm"
+    window.globalMouseListener.off "mousemove","newCommentConfirm"
     @tempRectMark.remove()
     @tempRectMark = null
   initUserMarks:(marks)->
