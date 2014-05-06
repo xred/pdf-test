@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="google" content="notranslate">
     <title>PDF.js viewer</title>
-		<link rel="resource" type="application/l10n" href="/static/core/pdfjs/web/locale/locale.properties"/>
-    <link rel="stylesheet" href="/static/core/pdfjs/web/viewer.css" />
-    <link rel="stylesheet" href="/static/core/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="/static/core/css/style.css"/>
-    <script type="text/javascript" src="/static/core/pdfjs/web/compatibility.js"></script>
-		<script type="text/javascript" src="/static/core/pdfjs/web/l10n.js"></script>
-		<script type="text/javascript" src="/static/core/pdfjs/build/pdf.js"></script>
-    <script type="text/javascript" src="/static/core/pdfjs/web/debugger.js"></script>
+		<link rel="resource" type="application/l10n" href="/core/pdfjs/web/locale/locale.properties"/>
+    <link rel="stylesheet" href="/core/pdfjs/web/viewer.css" />
+    <link rel="stylesheet" href="/core/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="/core/css/style.css"/>
+    <script type="text/javascript" src="/core/pdfjs/web/compatibility.js"></script>
+		<script type="text/javascript" src="/core/pdfjs/web/l10n.js"></script>
+		<script type="text/javascript" src="/core/pdfjs/build/pdf.js"></script>
+    <script type="text/javascript" src="/core/pdfjs/web/debugger.js"></script>
 		<!--my scripts--> 
-		<script type="text/javascript" src="/static/core/ckeditor/ckeditor.js"></script>
-    <script type="text/javascript" src="/static/core/js/viewer.js"></script>
-		<script type="text/javascript" src="/static/core/js/jquery.min.js"></script>
-		<script type="text/javascript" src="/static/core/js/suzaku.js"></script>
-		<script type="text/javascript" src="/static/core/js/rightSection.js"></script>
-		<script type="text/javascript" src="/static/core/js/main.js"></script>
+		<script type="text/javascript" src="/core/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="/core/js/viewer.js"></script>
+		<script type="text/javascript" src="/core/js/jquery.min.js"></script>
+		<script type="text/javascript" src="/core/js/suzaku.js"></script>
+		<script type="text/javascript" src="/core/js/rightSection.js"></script>
+		<script type="text/javascript" src="/core/js/main.js"></script>
   </head>
 
   <body tabindex="1">
@@ -43,24 +43,24 @@
           </div>
         </div>
       </div>  <!-- sidebarContainer -->
-
+			
       <div id="mainContainer">
-				<!--Ghost injection parts--> 
+				<!--injection parts--> 
 				<section id="right-section">
 					<div class="inner" >
-						<div id="comment-page" class="right-section-page" data-id="comment-page" >
-							<div class="new-comment-hint" data-id="new-comment-hint" style="display:none;" >
-								<div class="content" style="display:none;" >
-									<h2>New Comment</h2>
-									<p>Please drag a rect area in article to comment.</p>
-									<button class="cancel" data-id="new-comment-cancel-btn" >cancel</button>		
-								</div>
+						<div class="new-comment-hint" data-id="new-comment-hint" style="display:none;" >
+							<div class="content" style="display:none;" >
+								<h2>New Comment</h2>
+								<p>Please drag a rect area in article to comment.</p>
+								<button class="cancel" data-id="new-comment-cancel-btn" >cancel</button>		
 							</div>
+						</div>
+						<div id="comment-page" class="right-section-page" data-id="comment-page" >
 							<div class="comments-wrapper" data-id="comments-wrapper" ></div>
 						</div>
 						<div id="edit-page" class="right-section-page" data-id="edit-page" style="display:none;">
 							<div class="new-comment-options" data-id="new-comment-options" >
-								<h2>Complete new Comment</h2>
+								<h2>Complete Your Comment</h2>
 								<p class="hint" >Enter comment conente to complete</p>
 								<div class="color-picker" >
 									<button class="blue" ></button>
@@ -78,8 +78,7 @@
 								<button class="accept" data-id="edit-accept-btn" >accept</button>
 							</footer>
 						</div>
-						<div id="single-comment-page" class="right-section-page" data-id="single-comment-page" style="display:none;" >
-						</div>						
+						<div id="single-comment-page" class="right-section-page" data-id="single-comment-page" style="display:none;" > </div>						
 					</div>
 				</section>
 				<!--Ghost injection parts ends--> 

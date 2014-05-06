@@ -7,6 +7,7 @@ import MySQLdb
 
 from Base import BaseHandler
 import PDFView
+import User
 
 class Main(BaseHandler):
     def get(self):
@@ -22,21 +23,35 @@ class NotFoundHandler(BaseHandler):
     def post(self,pathname):
         self.abort(404)
 
+
+current_path =  os.path.dirname(os.path.abspath(__file__))       
 settings = {
     "cookie_secret":"41oETzPPXAGLLdkL5g9663JJFuYh7DRdq2XdTP1oAVo=",
     "login_url":"/login",
     "debug":True,
-    "static_path":os.path.join(os.path.dirname(os.path.abspath(__file__)),"../static"),
-    "template_path":os.path.join(os.path.dirname(os.path.abspath(__file__)),"../templates"),
+    "static_path":os.path.join(current_path,"../static"),
+    "template_path":os.path.join(current_path,"../templates"),
     "autoescape":None,
     "port":8005,
 }
+
+js_path = os.path.join(current_path,"../static/js")
+css_path = os.path.join(current_path,"../static/css")
+img_path = os.path.join(current_path,"../static/img")
+core_path = os.path.join(current_path,"../static/core")
 
 handlers = [
     (r"/", Main),
     (r"/ping", Ping),
     (r"/pdfview", PDFView.Index),
+    (r"/login", User.Login),
+    # static route
     (r"/static/(.*)",tornado.web.StaticFileHandler,dict(path=settings['static_path'])),
+    (r"/js/(.*)",tornado.web.StaticFileHandler,dict(path=js_path)),
+    (r"/css/(.*)",tornado.web.StaticFileHandler,dict(path=css_path)),
+    (r"/img/(.*)",tornado.web.StaticFileHandler,dict(path=img_path)),
+    (r"/core/(.*)",tornado.web.StaticFileHandler,dict(path=core_path)),
+    #not found
     (r"/(.*)",NotFoundHandler)
 ]
 

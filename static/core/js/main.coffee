@@ -26,13 +26,14 @@ class GlobalMouseListener extends Suzaku.EventEmitter
       @unbindEvents()
 
 class App extends Suzaku.EventEmitter
+  newCommentLock = false
   constructor:->
     super
     am = new Suzaku.ApiManager
     am.setPath ""
     tm = new Suzaku.TemplateManager
-    tm.setPath "/static/core/templates/"
-    tm.use "comments-item","single-comment-item","rect-mark"
+    tm.setPath "/core/templates/"
+    tm.use "comments-item","rect-mark","single-comment-item"
     tm.start (tpls)=>
       window.tpls = tpls
       @start()
@@ -42,9 +43,11 @@ class App extends Suzaku.EventEmitter
       @pages.push(new Page(this,p))
     @rightSection = new RightSection this
     $("#newComment").on "click",=>
+      return false if newCommentLock
       $("#newComment").addClass "toggled"
       @newComment()
   newComment:()->
+    newCommentLock = true
     @emit "newComment"
     @rightSection.showNewCommentHint()
   newCommentConfirm:(page)->
@@ -60,11 +63,13 @@ class App extends Suzaku.EventEmitter
     @rightSection.hideNewCommentHint()
     @rightSection.showEditPage "newComment",null,success,fail
   newCommentSuccessed:(page,content)->
+    newCommentLock = false
     page.newCommentCompleted()
     $("#newComment").removeClass "toggled"
     console.log "new comment page:",targetPage,"content:",content
     targetPage.initUserMarks()
   newCommentCanceled:(page)->
+    newCommentLock = false
     if page then page.newCommentCompleted()
     else for p in @pages
       p.newCommentCompleted()
@@ -107,6 +112,9 @@ class Page extends Suzaku.Widget
       @newCommentActive()
     app.on "newComment:confirm",=>
       @clearListeners()
+    app.on "newComment:active",(page)=>
+      if page isnt this
+        @clearListeners()
   clearListeners:->
     @dom.onmouseup = null
     @dom.onmousedown = null
@@ -114,6 +122,7 @@ class Page extends Suzaku.Widget
   newCommentActive:->
     @dom.onmousedown = (evt)=>
       if @tempRectMark then return false
+      @app.emit "newComment:active",this
       evt.preventDefault()
       @textLayerJ = @J.find('.textLayer')
       r = @textLayerJ[0].getBoundingClientRect()

@@ -1,10 +1,10 @@
 window.RunPDFViewer = function(_pdfUrl,_pdf_ready_callback){
 		console.log('use strict');
-		PDFJS.imageResourcesPath = '/static/core/pdfjs/web/images/';
-		PDFJS.workerSrc = '/static/core/pdfjs/build/pdf.worker.js';
-		PDFJS.cMapUrl = '/static/core/pdfjs/web/cmaps/';
+		PDFJS.imageResourcesPath = '/core/pdfjs/web/images/';
+		PDFJS.workerSrc = '/core/pdfjs/build/pdf.worker.js';
+		PDFJS.cMapUrl = '/core/pdfjs/web/cmaps/';
 		PDFJS.cMapPacked = true;
-		var testPdfUrl = '/static/core/pdfjs/web/compressed.tracemonkey-pldi-09.pdf';
+		var testPdfUrl = '/core/pdfjs/web/compressed.tracemonkey-pldi-09.pdf';
 		var DEFAULT_URL = _pdfUrl || testPdfUrl;
 		var DEFAULT_SCALE = 'auto';
 		var DEFAULT_SCALE_DELTA = 1.1;

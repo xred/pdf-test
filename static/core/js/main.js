@@ -55,7 +55,11 @@
   })(Suzaku.EventEmitter);
 
   App = (function(_super) {
+    var newCommentLock;
+
     __extends(App, _super);
+
+    newCommentLock = false;
 
     function App() {
       var am, tm,
@@ -64,8 +68,8 @@
       am = new Suzaku.ApiManager;
       am.setPath("");
       tm = new Suzaku.TemplateManager;
-      tm.setPath("/static/core/templates/");
-      tm.use("comments-item", "single-comment-item", "rect-mark");
+      tm.setPath("/core/templates/");
+      tm.use("comments-item", "rect-mark", "single-comment-item");
       tm.start(function(tpls) {
         window.tpls = tpls;
         return _this.start();
@@ -83,12 +87,16 @@
       }
       this.rightSection = new RightSection(this);
       return $("#newComment").on("click", function() {
+        if (newCommentLock) {
+          return false;
+        }
         $("#newComment").addClass("toggled");
         return _this.newComment();
       });
     };
 
     App.prototype.newComment = function() {
+      newCommentLock = true;
       this.emit("newComment");
       return this.rightSection.showNewCommentHint();
     };
@@ -113,6 +121,7 @@
     };
 
     App.prototype.newCommentSuccessed = function(page, content) {
+      newCommentLock = false;
       page.newCommentCompleted();
       $("#newComment").removeClass("toggled");
       console.log("new comment page:", targetPage, "content:", content);
@@ -121,6 +130,7 @@
 
     App.prototype.newCommentCanceled = function(page) {
       var p, _i, _len, _ref;
+      newCommentLock = false;
       if (page) {
         page.newCommentCompleted();
       } else {
@@ -208,6 +218,11 @@
       app.on("newComment:confirm", function() {
         return _this.clearListeners();
       });
+      app.on("newComment:active", function(page) {
+        if (page !== _this) {
+          return _this.clearListeners();
+        }
+      });
     }
 
     Page.prototype.clearListeners = function() {
@@ -223,6 +238,7 @@
         if (_this.tempRectMark) {
           return false;
         }
+        _this.app.emit("newComment:active", _this);
         evt.preventDefault();
         _this.textLayerJ = _this.J.find('.textLayer');
         r = _this.textLayerJ[0].getBoundingClientRect();

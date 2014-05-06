@@ -29,6 +29,9 @@ class EditPage extends RightSectionPage
     CKEDITOR.instances.editPageEditor.setData(inputData)
     
 class SingleCommentPage extends RightSectionPage
+  constructor:(target)->
+    target.J.html window.tpls['single-comment-item']
+    super target
   init:(commentData)->
     return null
             
@@ -70,7 +73,6 @@ class window.RightSection extends Suzaku.Widget
       @hideNewCommentHint()
       @app.newCommentCanceled()
   hideNewCommentHint:->
-    console.log "fuck"
     hintJ = @UI['new-comment-hint'].J
     contentJ = hintJ.find(".content")
     contentJ.slideUp "fast",=>
@@ -85,8 +87,10 @@ class window.RightSection extends Suzaku.Widget
       fail()
       @goBack()
     @goInto @editPage
-  showSingleCommentPage:(commentData)->
+  showSingleComment:(commentData)->
     @singleCommentPage.init commentData
+    @singleCommentPage.UI['back'].onclick = =>
+      @goBack()
     @goInto @singleCommentPage
         
 class CommentsItem extends Suzaku.Widget

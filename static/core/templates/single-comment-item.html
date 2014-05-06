@@ -1,17 +1,36 @@
-<div class="single-comments-item" >
+<div class="single-comment-item">
 	<header >
-		<button class="add-comment"><img src="../img/icon-add"  /></button>
+		<button class="back" data-id="back" title="Back to all comments" >Back</button>
 	</header>
-	<ul data-id="list" >
+	<div class="comment" data-id="comment" >
+		<img class="avatar" data-id="avatar" src="/static/core/img/test-avatar.png"></img>
+		<div class="content-wrapper" >
+			<p><span class="id" data-id="id" >Roxasora</span>
+				<span class="date" data-id="date" >2014.03.02</span></p>
+			<section class="content" data-id="content" >
+				Dynamic languages such as JavaScript are more difficult to com-pile than
+				statically typed ones.
+			</section>
+		</div>
+	</div>
+	<ul class="reply-list" data-id="reply-list" >
 	</ul>
+	<hr />
 	<div class="reply-box" data-id="reply-box" >
-		<!--reply-->
 		<input type="text" value="" placeholder="请输入新的评论" />
-		<a class="btn btn-default" >发送</a>
+		<a class="btn btn-default" >submit</a>
 	</div>
 	<template >
-		<li class="single-comment-li" >
-			<img class="avatar" ></img>
+		<li class="single-reply-li" >
+			<div class="vote-box" >
+				<button class="vote-up" data-id="vote-up" >
+					<span class="vote-up-num" data-id="vote-up-num" ></span>
+				</button>
+				<button class="vote-down" data-id="vote-down" ></button>
+			</div>
+			<div class="content-wrapper" data-id="content-wrapper" >
+				<img class="avatar" data-id="avatar"  ></img>
+			</div>
 		</li>
 	</template>
 </div>
