@@ -17,12 +17,13 @@ class Login(BaseHandler):
         if thePsw != None:
             thePsw = thePsw[0]
             if thePsw == psw:
-                self.write('{"flag":1}')
+                res = dict(flag=1)
                 self.set_secure_cookie('cookie_email',self.get_argument('email'))
             else:
-                self.write('{"flag":0}')
+                res = dict(flag=0,naem="a",num=5)
         else:
-            self.write('{"flag":0}')
+            res = {"flag":0}
+        self.write(str(res))
             
 class Register(BaseHandler):
     def get(self):
