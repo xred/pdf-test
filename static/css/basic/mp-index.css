@@ -1,0 +1,159 @@
+.mp-inline-block {
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+}
+body {
+  padding-top: 100px;
+}
+.mp-body-header {
+  padding: 0 20px;
+}
+.mp-body-header .mbh-search-bar {
+  max-width: 300px;
+  height: 20px;
+  float: left;
+  margin-right: 20px;
+}
+.mp-body-header .mbh-search-bar a {
+  cursor: pointer;
+  text-decoration: none;
+}
+.mp-body-header .viewall {
+  font-size: 16px;
+  line-height: 34px;
+}
+.mp-body-header:after {
+  clear: both;
+}
+.mp-index-body {
+  padding: 0 20px;
+}
+.mp-index-body .panel-heading {
+  padding: 15px 20px;
+  display: block;
+  font-size: 18px;
+}
+.mp-index-body .panel-heading a.paper-title {
+  color: #fff;
+}
+.mp-index-body .paper-panel .mp-btn-paperPanel-collapse {
+  float: right;
+  font-style: normal;
+  cursor: pointer;
+  color: #b7d7f1;
+}
+.mp-index-body .paper-panel .mp-btn-paperPanel-collapse:hover {
+  color: #fff;
+}
+.mp-index-body .one-paper-position-panel {
+  margin-bottom: 20px;
+}
+.mp-index-body .panel-body {
+  padding: 15px 20px;
+}
+.mp-index-body .panel-body .panel-comment-title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #bbb;
+  text-transform: uppercase;
+  display: block;
+  margin-left: 60px;
+}
+.mp-index-body .panel-body .comment-list .avatar-holder {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  float: left;
+  border-radius: 3px;
+  overflow: hidden;
+  text-align: center;
+}
+.mp-index-body .panel-body .comment-list .avatar-holder i {
+  font-size: 20px;
+  line-height: 40px;
+  color: #428bca;
+}
+.mp-index-body .panel-body .comment-list li {
+  position: relative;
+  margin-bottom: 10px;
+}
+.mp-index-body .panel-body .comment-list .comment-body {
+  position: relative;
+  display: block;
+  margin-left: 60px;
+  cursor: pointer;
+  overflow: visible;
+}
+.mp-index-body .panel-body .comment-list .comment-body a {
+  color: #666;
+  display: block;
+  word-break: break-word;
+}
+.mp-index-body .panel-body .comment-list .comment-body a:hover {
+  color: #333;
+}
+.mp-index-body .panel-body .comment-list .comment-body .panel-heading {
+  padding: 8px 20px;
+  cursor: auto;
+}
+.mp-index-body .panel-body .comment-list .comment-body .panel-heading .comment-name {
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+}
+.mp-index-body .panel-body .comment-list .comment-body .panel-heading span {
+  font-size: 14px;
+  color: #888;
+}
+.mp-index-body .panel-body .comment-list .comment-body:before {
+  content: " ";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-top: 8px solid rgba(0, 0, 0, 0);
+  border-bottom: 8px solid rgba(0, 0, 0, 0);
+  border-left: 0px solid #000;
+  border-right: 9px solid #e3e3e3;
+  left: -10px;
+  top: 10px;
+}
+.mp-index-body .panel-body .comment-list .comment-body:after {
+  content: " ";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-top: 8px solid rgba(0, 0, 0, 0);
+  border-bottom: 8px solid rgba(0, 0, 0, 0);
+  border-left: 0px solid #000;
+  border-right: 9px solid #f5f5f5;
+  top: 10px;
+  left: -8px;
+}
+.mp-index-body .otherComments {
+  padding: 20px;
+  background: #FAFAFA;
+  border-top: 1px solid #ddd;
+}
+.mp-index-body .moreComments {
+  display: block;
+  font-size: 24px;
+  text-align: center;
+  text-decoration: none;
+}
+.timeline-comment-wrapper > .timeline-comment:after,
+.timeline-comment-wrapper > .timeline-comment:before,
+.timeline-new-comment .timeline-comment:after,
+.timeline-new-comment .timeline-comment:before {
+  position: absolute;
+  top: 11px;
+  left: -16px;
+  right: 100%;
+  width: 0;
+  height: 0;
+  display: block;
+  content: " ";
+  border-color: transparent;
+  border-style: solid solid outset;
+  pointer-events: none;
+}

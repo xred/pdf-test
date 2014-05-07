@@ -47,6 +47,7 @@ handlers = [
     (r"/ping", Ping),
     (r"/pdfview", PDFView.Index),
     (r"/login", User.Login),
+    (r"/register",User.Register),
     # static route
     (r"/static/(.*)",tornado.web.StaticFileHandler,dict(path=settings['static_path'])),
     (r"/js/(.*)",tornado.web.StaticFileHandler,dict(path=js_path)),

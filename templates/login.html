@@ -1,0 +1,36 @@
+﻿{% extends "user_template.html" %}
+
+{% block css %}
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap3/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/common/common.css">
+    <link rel="stylesheet" type="text/css" href="/css/basic/mp-login.css">
+{% end %}
+
+{% block body %}
+    <div class="container mp-body">
+        <div class="panel panel-default">
+            <div class="panel-heading">Login</div>
+            <div class="panel-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Email address</label>
+                        <input type="" class="form-control" id="inputEmail" placeholder="Please enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Password</label>
+                        <input type="password" class="form-control mp-psw" id="inputPassword" placeholder="Please enter your password">
+                        <div class="alert alert-danger" id="alert-login">Your email or password may not be correct!</div>
+                    </div>
+                    <a class="btn btn-lg btn-primary" id="btn-login" click="">login</a>
+                    <a href="register" class="btn btn-lg mp-btn-login">register</a>
+                </form> 
+            </div>
+        </div>
+    </div>
+{% end %}
+
+{% block script %}
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/login.js"></script>
+{% end %}

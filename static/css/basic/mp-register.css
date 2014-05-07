@@ -1,0 +1,33 @@
+.jumbotron,
+.panel {
+  min-height: 200px;
+  width: 500px;
+  margin: 0 auto;
+  border: 1px solid #E0E0E0;
+  background: #f5f5f5;
+}
+.jumbotron .panel-heading,
+.panel .panel-heading {
+  padding: 10px 40px;
+  font-size: 26px;
+  background: #eee;
+}
+.jumbotron .panel-body,
+.panel .panel-body {
+  padding: 15px 40px;
+}
+.container .form-group .mp-psw {
+  margin-bottom: 20px;
+}
+.container .alert {
+  font-size: 14px;
+  padding: 10px;
+  margin-top: 5px;
+  display: none;
+}
+.container .mp-btn-login {
+  float: right;
+}
+.mp-body {
+  min-height: 600px;
+}

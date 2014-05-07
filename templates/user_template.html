@@ -1,0 +1,79 @@
+<html>
+<head>
+    <title>{{page_title}}</title>
+    <meta charset="utf-8">
+    {% block css %}
+    {% end %}
+</head>
+<body>
+    <!-- header -->
+{% block header %}
+    <div class="navbar navbar-fixed-top navbar-inverse mp-nav" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="#" class="navbar-brand">MarkPaper</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="#">Home</a>
+                    </li>
+                    <li>
+                        <a href="#">Other</a>
+                    </li>
+                    <li>
+                        <a href="#">other2</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="active">
+                        <a href="#">rigister</a>
+                    </li>
+                    <li>
+                        <a href="#" class="mp-common-nav-login">login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% end %}
+    <!--body-->
+{% block body %}
+{% end %}
+    <!--footer-->
+{% block footer %}
+    <div class="mp-footer">
+        <div class="container">
+            <ul class="mp-footer-list">
+                <li>lalalalalallalalalal</li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+            </ul>
+            <ul class="mp-footer-list">
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+                <li>
+                    <a href="#">someLinks</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+{% end %}
+{% block script %}
+{% end %}
+</body>
+</html>
