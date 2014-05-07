@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from Base import BaseHandler
+import Utils
 import DBMods
 import MySQLdb
 conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
@@ -19,7 +20,7 @@ class Login(BaseHandler):
             checkPassword = checkEmail[0].password
             if checkPassword == psw:
                 res = dict(flag=1)
-                self.set_secure_cookie('cookie_email',self.get_argument('email'))
+                self.set_secure_cookie('user',email)
             else:
                 res = dict(flag=0,naem="a",num=5)
         else:
@@ -46,6 +47,6 @@ class Register(BaseHandler):
         self.write(res)
 
 class Home(BaseHandler):
-    # @BaseHandler.authenticated
+    @Utils.authenticated
     def get(self):
         self.render('home.html')
