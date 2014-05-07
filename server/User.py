@@ -23,6 +23,7 @@ class Login(BaseHandler):
                 self.write('{"flag":0}')
         else:
             self.write('{"flag":0}')
+            
 class Register(BaseHandler):
     def get(self):
         self.render('register.html',page_title='register')
