@@ -6,4 +6,4 @@ def add_user(email,password,nickname):
 	session.commit();
 
 
-add_user("499126563@qq.com","red123123","red")
+#add_user("test@test.com","123456","test")

@@ -1,33 +1,35 @@
 # -*- coding:utf-8 -*-
 from Base import BaseHandler
-import DBMods.Models
+import DBMods
 import MySQLdb
 conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
 cursor = conn.cursor()
 
 class Login(BaseHandler):
-	def get(self):
-		self.render('login.html',page_title='login')
-	def post(self):
-		email = self.get_argument('email')
-		print email
-		psw = self.get_argument('psw')
-		thePsw = cursor.execute('select password from user where email="%s"'%email)
-		thePsw = cursor.fetchone()
-		if thePsw != None:
-			thePsw = thePsw[0]
-			if thePsw == psw:
-				self.write('{"flag":1}')
-				self.set_secure_cookie('cookie_email',self.get_argument('email'))
-			else:
-				self.write('{"flag":0}')
-		else:
-			self.write('{"flag":0}')
+    def get(self):
+        self.render('login.html',page_title='login')
+    def post(self):
+        email = self.get_argument('email')
+        print email
+        psw = self.get_argument('psw')
+        thePsw = cursor.execute('select password from user where email="%s"'%email)
+        thePsw = cursor.fetchone()
+        if thePsw != None:
+            thePsw = thePsw[0]
+            if thePsw == psw:
+                self.write('{"flag":1}')
+                self.set_secure_cookie('cookie_email',self.get_argument('email'))
+            else:
+                self.write('{"flag":0}')
+        else:
+            self.write('{"flag":0}')
 class Register(BaseHandler):
-	def get(self):
-		Models.query_user()
-		self.render('register.html',page_title='register')
-	def post(self):
-		email = self.get_argument('email')
-		psw = self.get_argument('psw')
-		# if 
+    def get(self):
+        self.render('register.html',page_title='register')
+    def post(self):
+        email = self.get_argument('email')
+        psw = self.get_argument('psw')
+        res = DBMods.Query.query_user(email=email)
+        print len(res)
+        for i in res:
+            print i.uid

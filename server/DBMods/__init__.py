@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import Models
 import Create
-#__all__ = ['Models','Create']
+import Query
+__all__ = ['Models','Create','Query']
 
 
