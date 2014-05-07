@@ -3,7 +3,14 @@ from Models import *
 def query_user(**argv):
     if "email" in argv:
         email = argv['email']
-        cursor = session.query(User).filter(User.email == email)
-        return cursor.all()
+        res = session.query(User).filter(User.email == email).all()
+        if not len(res):
+            return None
+        else:
+            return res
     else:
-        return null
+        res = session.query(User).all()
+        if not len(res):
+            return None
+        else:
+            return res

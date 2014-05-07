@@ -20,7 +20,7 @@
         dataType:'json',
         success:function(data,xhr){
           if(data['flag']==1){
-            window.location.href='//localhost:8005/'
+            window.location.href='//localhost:8005/home'
           }
           else{
             return loginAlert.fadeIn()

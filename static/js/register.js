@@ -19,21 +19,25 @@
     pswInput1 = jQuery("#inputPassword1");
     pswInput2 = jQuery("#inputPassword2");
     pswAlert = jQuery("#alert-psw");
+    nicknameInput = jQuery("#inputNickname");
     registerBtn.click(function(){
-    console.log(1)
+    // console.log(1)
     req = jQuery.ajax({
       url:'//localhost:8005/register',
       type:'POST',
       data:{
         email:emailInput.val(),
-        psw:pswInput1.val()
+        psw:pswInput1.val(),
+        nickname:nicknameInput.val()
       },
       dataType:'json',
       success:function(data,xhr){
         if(data['flag']==1){
+          // console.log(1)
           window.location.href='//localhost:8005/login';
         }
         else{
+          // console.log(2)
           addRegisterDis();
           alert('the email has been used')
         }
