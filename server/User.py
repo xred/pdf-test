@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 from Base import BaseHandler
-import sql_orm
+import DBMods.Models
 import MySQLdb
-conn = MySQLdb.connect(host='localhost',user='root',passwd='anyue125233',db='markpaper')
+conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
 cursor = conn.cursor()
 
 class Login(BaseHandler):
@@ -25,7 +25,7 @@ class Login(BaseHandler):
 			self.write('{"flag":0}')
 class Register(BaseHandler):
 	def get(self):
-		sql_orm.query_user()
+		Models.query_user()
 		self.render('register.html',page_title='register')
 	def post(self):
 		email = self.get_argument('email')
