@@ -1,79 +1,74 @@
+<!DOCTYPE html>
 <html>
-<head>
-    <title>{{page_title}}</title>
+	<head>
+    <title>{{page}}</title>
     <meta charset="utf-8">
-    {% block css %}
-    {% end %}
-</head>
-<body>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap3/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/common/common.css">
+    {% block css %}{% end %}
+	</head>
+	<body>
     <!-- header -->
-{% block header %}
+		{% block header %}
     <div class="navbar navbar-fixed-top navbar-inverse mp-nav" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <a href="#" class="navbar-brand">MarkPaper</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>
-                        <a href="#">Home</a>
-                    </li>
-                    <li>
-                        <a href="#">Other</a>
-                    </li>
-                    <li>
-                        <a href="#">other2</a>
-                    </li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                    <li class="active">
-                        <a href="#">rigister</a>
-                    </li>
-                    <li>
-                        <a href="#" class="mp-common-nav-login">login</a>
-                    </li>
-                </ul>
-            </div>
+      <div class="container">
+        <div class="navbar-header">
+          <a href="#" class="navbar-brand">MarkPaper</a>
         </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li> <a href="#">Home</a> </li>
+            <li> <a href="#">Other</a> </li>
+            <li> <a href="#">other2</a> </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+						{% block header-links %}
+            <li > <a href="/register">rigister</a> </li>
+            <li > <a href="/login" class="mp-common-nav-login">login</a> </li>
+						{% end %}
+          </ul>
+        </div>
+      </div>
     </div>
-{% end %}
+		{% end %}
     <!--body-->
-{% block body %}
-{% end %}
+		{% block body %}
+		{% end %}
     <!--footer-->
-{% block footer %}
+		{% block footer %}
     <div class="mp-footer">
-        <div class="container">
-            <ul class="mp-footer-list">
-                <li>lalalalalallalalalal</li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-            </ul>
-            <ul class="mp-footer-list">
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-                <li>
-                    <a href="#">someLinks</a>
-                </li>
-            </ul>
-        </div>
+      <div class="container">
+        <ul class="mp-footer-list">
+          <li>lalalalalallalalalal</li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+        </ul>
+        <ul class="mp-footer-list">
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+          <li>
+            <a href="#">someLinks</a>
+          </li>
+        </ul>
+      </div>
     </div>
-{% end %}
-{% block script %}
-{% end %}
-</body>
+		{% end %}
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+		{% block script %}{% end %}
+	</body>
 </html>

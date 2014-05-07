@@ -7,7 +7,7 @@ cursor = conn.cursor()
 
 class Login(BaseHandler):
     def get(self):
-        self.render('login.html',page_title='login')
+        self.render('login.html',page='login')
     def post(self):
         email = self.get_argument('email')
         print email
@@ -26,7 +26,7 @@ class Login(BaseHandler):
             
 class Register(BaseHandler):
     def get(self):
-        self.render('register.html',page_title='register')
+        self.render('register.html',page='register')
     def post(self):
         email = self.get_argument('email')
         psw = self.get_argument('psw')
