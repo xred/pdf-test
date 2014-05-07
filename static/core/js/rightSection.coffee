@@ -3,22 +3,21 @@ class RightSectionPage extends Suzaku.Widget
   init:-> return true
   enterFromRight:->
     @emit "enter"
-    @J.css {"z-index":9,left:"110%",display:"block"}
+    @J.css {left:"110%",display:"block"}
     @J.animate {left:"0"},animateRate
   enterFromLeft:->
     @emit "enter"
     @J.css {left:"-110%",display:"block"}
-    @J.animate {left:"0"},animateRate,=>
-      @J.css {"z-index":9}
+    @J.animate {left:"0"},animateRate
   leaveToLeft:->
     @emit "leave"
-    @J.css {"z-index":1,left:"0"}
-    @J.animate {left:"-110%"},animateRate,=>@J.hide()
+    @J.css {left:"0"}
+    @J.animate {left:"-110%"},animateRate,=>
+      @J.hide()
   leaveToRight:->
     @emit "leave"
     @J.css {left:"0"}
     @J.animate {left:"110%"},animateRate,=>
-      @J.css {"z-index":1}
       @J.hide()
 
 class EditPage extends RightSectionPage
@@ -33,6 +32,9 @@ class SingleCommentPage extends RightSectionPage
     target.J.html window.tpls['single-comment-item']
     super target
   init:(commentData)->
+    for d in [1..5]
+      item = new Suzaku.Widget @UI['single-reply-li-tpl'].J.html()
+      item.appendTo @UI['reply-list']
     return null
             
 class window.RightSection extends Suzaku.Widget
