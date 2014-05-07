@@ -1,6 +1,5 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from sqlalchemy import Column
 from sqlalchemy.types import CHAR, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql import \
@@ -16,7 +15,7 @@ db_config = {
 	'user':'root',
 	'db':'markpaper',
 	'charset':'utf8',
-	'passwd':'xredcn123'
+	'passwd':''
 }
 
 engine = create_engine('mysql://%s:%s@%s/%s?charset=%s'%(

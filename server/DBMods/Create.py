@@ -1,4 +1,4 @@
-from config import *
+from Models import *
 
 def add_user(email,password,nickname):
 	user = User(email=email,password=password,nickname=nickname)
@@ -6,4 +6,4 @@ def add_user(email,password,nickname):
 	session.commit();
 
 
-# add_user("499126563@qq.com","red123123","red")
+add_user("499126563@qq.com","red123123","red")
