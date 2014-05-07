@@ -1,10 +1,10 @@
 <div class="single-comment-item">
-	<header >
+	<header class="single-comment-item-header" >
 		<button class="back" data-id="back" title="Back to all comments" >Back</button>
 	</header>
 	<div class="inner" >
 		<div class="comment" data-id="comment" >
-			<div class="header-part" >
+			<header class="header-part" >
 				<div class="vote-box" >
 					<button class="vote-up" data-id="vote-up" >
 						<i class="icon-caret-up"></i>
@@ -17,27 +17,42 @@
 				<p class="id" data-id="id"  >Roxasora</p>
 				<p class="intro" data-id="intro" >“I just wanted to mention that the equivalent of Helvetica is Arial. ” mean</p>
 				<img class="avatar" data-id="avatar" src="/static/core/img/test-avatar.png"></img>
-			</div>
+			</header>
 			<section class="content" data-id="content" >
 				<p >You can specify whatever font you like. It will show up (on Windows or anywhere else) only if the reader has that font (and if the operating system knows it by the same name.) </p>
 				<p >“Helvetica Neue” was offered in True Type and Postscript versions, and is now offered in OpenScript versions, so there are a lot of versions of it around, including versions slightly renamed from different vendors, which causes confusion. I work in the data processing department of a company that uses a lot of fonts, and we have long had Helvetica Neue. </p>
 				<p >You can use Helvetica Neue, but I suggest that you also include names of fonts that match it closely, such as Helvetica and even Arial and provide the final name as “SansSerif”, so that those who don't have Helvetica Neue will see things in a reasonably compatible font. Note that some people use their browsers to override the fonts wanted by web page creators with their own choices. </p>
 			</section>
-			<div class="footer-part" >
-			</div>
+			<footer class="footer-part" >
+				<span class="date" data-id="date" >2014-12-13</span>
+				<button class="reply-btn" data-id="reply" title="reply to this comment">
+					<i class="icon-comment-alt"></i>
+					<b class="replys-num" data-id="replys-num" >20</b>
+				</button>
+			</footer>
 		</div>
 		<ul class="reply-list" data-id="reply-list" >
 		</ul>
 	</div>
 	<template data-id="single-reply-li-tpl">
 		<li class="single-reply-li"  >
-			<img class="avatar" data-id="avatar"  ></img>
+			<img class="avatar" data-id="avatar" src="/core/img/test-avatar.png" />
 			<div class="content-wrapper" data-id="content-wrapper" >
-				<span class="id" data-id="id" ></span>
+				<p class="id" data-id="id" >Cloud</p>
 				<section class="content" data-id="content" >
 					Hey I know it's been 5 years but YOU NEED TO READ THIS: 
-					what is even more better than the 'Helvetica Neue' is the font called 'Century Gothic'. It's originally Ultrathin but you can make it Bold and yet looks 2x better than Helvetica's style. 
+p					what is even more better than the 'Helvetica Neue' is the font called 'Century Gothic'. It's originally Ultrathin but you can make it Bold and yet looks 2x better than Helvetica's style. 
 				</section>
+				<footer >
+					<span class="date" data-id="date" >2014-12-13</span>
+					<button class="reply-btn" data-id="reply" title="reply to this user">
+						<i class="icon-comment-alt"></i>
+					</button>
+					<button class="vote-up-btn" data-id="vote-up" title="reply to this user">
+						<i class="icon-thumbs-up-alt"></i>
+						<b class="vote-up-num" >5</b>
+					</button>
+				</footer>
 			</div>
 		</li>
 	</template>
