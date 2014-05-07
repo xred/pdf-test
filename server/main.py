@@ -40,7 +40,6 @@ js_path = os.path.join(current_path,"../static/js")
 css_path = os.path.join(current_path,"../static/css")
 img_path = os.path.join(current_path,"../static/img")
 core_path = os.path.join(current_path,"../static/core")
-font_path = os.path.join(current_path,"../static/font")
 
 handlers = [
     (r"/", Main),
@@ -53,7 +52,6 @@ handlers = [
     (r"/js/(.*)",tornado.web.StaticFileHandler,dict(path=js_path)),
     (r"/css/(.*)",tornado.web.StaticFileHandler,dict(path=css_path)),
     (r"/img/(.*)",tornado.web.StaticFileHandler,dict(path=img_path)),
-    (r"/font/(.*)",tornado.web.StaticFileHandler,dict(path=font_path)),
     (r"/core/(.*)",tornado.web.StaticFileHandler,dict(path=core_path)),
     #not found
     (r"/(.*)",NotFoundHandler)
