@@ -6,6 +6,7 @@ from Utils import *
 class BaseHandler(tornado.web.RequestHandler):
     "所有Handler的基类,封装一些常用的方法"
     user_record = None
+    args = {}
     def abort(self,error_code=400):
         """
         400 : 参数错误
@@ -22,15 +23,3 @@ class BaseHandler(tornado.web.RequestHandler):
         if not username:
             return None
         return tornado.escape.xhtml_escape(username)
-    def authenticated(func):
-        """
-        @装饰器
-        主要用于验证用户是否登录，或者验证用户的权限
-        """
-        def wrapper(self,*args,**kwargs):
-            if not self.current_user:
-                self.abort(401)
-                self.redirect("/login")
-                return None
-            return func(self,*args,**kwargs)
-        return wrapper
