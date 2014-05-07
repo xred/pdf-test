@@ -7,6 +7,7 @@ import MySQLdb
 import DBMods
 
 from Base import BaseHandler
+import Utils
 import PDFView
 import User
 
@@ -15,6 +16,7 @@ class Main(BaseHandler):
         self.redirect("/pdfview")
 
 class Ping(BaseHandler):
+    @Utils.authenticated
     def get(self):
         self.write('pong')
         
