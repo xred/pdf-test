@@ -2,34 +2,42 @@
 	<header >
 		<button class="back" data-id="back" title="Back to all comments" >Back</button>
 	</header>
-	<div class="comment" data-id="comment" >
-		<img class="avatar" data-id="avatar" src="/static/core/img/test-avatar.png"></img>
-		<div class="content-wrapper" >
-			<p><span class="id" data-id="id" >Roxasora</span>
-				<span class="date" data-id="date" >2014.03.02</span></p>
-			<section class="content" data-id="content" >
-				Dynamic languages such as JavaScript are more difficult to com-pile than
-				statically typed ones.
-			</section>
-		</div>
-	</div>
-	<ul class="reply-list" data-id="reply-list" >
-	</ul>
-	<hr />
-	<div class="reply-box" data-id="reply-box" >
-		<input type="text" value="" placeholder="请输入新的评论" />
-		<a class="btn btn-default" >submit</a>
-	</div>
-	<template >
-		<li class="single-reply-li" >
-			<div class="vote-box" >
-				<button class="vote-up" data-id="vote-up" >
-					<span class="vote-up-num" data-id="vote-up-num" ></span>
-				</button>
-				<button class="vote-down" data-id="vote-down" ></button>
+	<div class="inner" >
+		<div class="comment" data-id="comment" >
+			<div class="header-part" >
+				<div class="vote-box" >
+					<button class="vote-up" data-id="vote-up" >
+						<i class="icon-caret-up"></i>
+						<span class="vote-up-num" data-id="vote-up-num" >52341</span>
+					</button>
+					<button class="vote-down" data-id="vote-down" >
+						<i class="icon-caret-down"></i>
+					</button>
+				</div>
+				<p class="id" data-id="id"  >Roxasora</p>
+				<p class="intro" data-id="intro" >“I just wanted to mention that the equivalent of Helvetica is Arial. ” mean</p>
+				<img class="avatar" data-id="avatar" src="/static/core/img/test-avatar.png"></img>
 			</div>
+			<section class="content" data-id="content" >
+				<p >You can specify whatever font you like. It will show up (on Windows or anywhere else) only if the reader has that font (and if the operating system knows it by the same name.) </p>
+				<p >“Helvetica Neue” was offered in True Type and Postscript versions, and is now offered in OpenScript versions, so there are a lot of versions of it around, including versions slightly renamed from different vendors, which causes confusion. I work in the data processing department of a company that uses a lot of fonts, and we have long had Helvetica Neue. </p>
+				<p >You can use Helvetica Neue, but I suggest that you also include names of fonts that match it closely, such as Helvetica and even Arial and provide the final name as “SansSerif”, so that those who don't have Helvetica Neue will see things in a reasonably compatible font. Note that some people use their browsers to override the fonts wanted by web page creators with their own choices. </p>
+			</section>
+			<div class="footer-part" >
+			</div>
+		</div>
+		<ul class="reply-list" data-id="reply-list" >
+		</ul>
+	</div>
+	<template data-id="single-reply-li-tpl">
+		<li class="single-reply-li"  >
+			<img class="avatar" data-id="avatar"  ></img>
 			<div class="content-wrapper" data-id="content-wrapper" >
-				<img class="avatar" data-id="avatar"  ></img>
+				<span class="id" data-id="id" ></span>
+				<section class="content" data-id="content" >
+					Hey I know it's been 5 years but YOU NEED TO READ THIS: 
+					what is even more better than the 'Helvetica Neue' is the font called 'Century Gothic'. It's originally Ultrathin but you can make it Bold and yet looks 2x better than Helvetica's style. 
+				</section>
 			</div>
 		</li>
 	</template>

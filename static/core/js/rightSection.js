@@ -23,7 +23,6 @@
     RightSectionPage.prototype.enterFromRight = function() {
       this.emit("enter");
       this.J.css({
-        "z-index": 9,
         left: "110%",
         display: "block"
       });
@@ -33,7 +32,6 @@
     };
 
     RightSectionPage.prototype.enterFromLeft = function() {
-      var _this = this;
       this.emit("enter");
       this.J.css({
         left: "-110%",
@@ -41,18 +39,13 @@
       });
       return this.J.animate({
         left: "0"
-      }, animateRate, function() {
-        return _this.J.css({
-          "z-index": 9
-        });
-      });
+      }, animateRate);
     };
 
     RightSectionPage.prototype.leaveToLeft = function() {
       var _this = this;
       this.emit("leave");
       this.J.css({
-        "z-index": 1,
         left: "0"
       });
       return this.J.animate({
@@ -71,9 +64,6 @@
       return this.J.animate({
         left: "110%"
       }, animateRate, function() {
-        _this.J.css({
-          "z-index": 1
-        });
         return _this.J.hide();
       });
     };
@@ -114,6 +104,11 @@
     }
 
     SingleCommentPage.prototype.init = function(commentData) {
+      var d, item, _i;
+      for (d = _i = 1; _i <= 5; d = ++_i) {
+        item = new Suzaku.Widget(this.UI['single-reply-li-tpl'].J.html());
+        item.appendTo(this.UI['reply-list']);
+      }
       return null;
     };
 
