@@ -1,46 +1,44 @@
 ﻿{% extends "user_template.html" %}
-
 {% block css %}
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/css/bootstrap3/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/css/common/common.css">
-    <link rel="stylesheet" type="text/css" href="/css/basic/mp-register.css">
- {% end %}
-
- {% block body %}
-    <div class="container mp-body">
-        <div class="panel panel-default">
-            <div class="panel-heading">Register</div>
-            <div class="panel-body">
-                <form role="form">
-                    <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="" class="form-control" id="inputEmail" placeholder="Please enter your email">
-                        <div class="alert alert-danger" id="alert-email">Your email address is not correct, please enter the correct email.</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control mp-psw" id="inputPassword1" placeholder="Please enter your password">
-                        <input type="password" class="form-control mp-psw" id="inputPassword2" placeholder="Please repeat your password">
-                        <div class="alert alert-danger" id="alert-psw">Your second input is not the same as your first input!</div>
-                    </div>
-                    <div class="form-group">
-                        <label >Nickname</label>
-                        <input type="nickname" class="form-control" id="inputNickname" placeholder="Please enter your nickname">
-                    </div>
-<!--                     <div class="form-group">
-                        <label>Fullname</label>
-                        <input type="fullname" class="form-control" id="inputFullname" placeholder="Please enter your fullname">
-                    </div> -->
-                    <a type="" class="btn btn-lg btn-primary" id="btn-register" disabled="disabled" click="">register</a>
-                    <a href="login" class="btn btn-lg mp-btn-login">login</a>
-                </form> 
-            </div>
+<link rel="stylesheet" type="text/css" href="/css/basic/mp-register.css">
+{% end %}
+{% block header-links %}
+<li class="active" > <a href="/register">rigister</a> </li>
+<li > <a href="/login" class="mp-common-nav-login">login</a> </li>
+{% end %}
+{% block body %}
+<div class="container mp-body">
+  <div class="panel panel-default">
+    <div class="panel-heading">Register</div>
+    <div class="panel-body">
+      <form role="form">
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="" class="form-control" id="inputEmail" placeholder="Please enter your email">
+          <div class="alert alert-danger" id="alert-email">Your email address is not correct, please enter the correct email.</div>
         </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Password</label>
+          <input type="password" class="form-control mp-psw" id="inputPassword1" placeholder="Please enter your password">
+          <input type="password" class="form-control mp-psw" id="inputPassword2" placeholder="Please repeat your password">
+          <div class="alert alert-danger" id="alert-psw">Your second input is not the same as your first input!</div>
+        </div>
+				<div class="form-group">
+					<label >Nickname</label>
+					<input type="nickname" class="form-control" id="inputNickname" placeholder="Please enter your nickname">
+        </div>
+        <!-- <div class="form-group"> -->
+        <!--   <label>Fullname</label> -->
+        <!--   <input type="fullname" class="form-control" id="inputFullname" placeholder="Please enter your fullname"> -->
+        <!-- </div> -->
+        <a type="" class="btn btn-lg btn-primary" id="btn-register" disabled="disabled" click="">register</a>
+        <a href="login" class="btn btn-lg mp-btn-login">login</a>
+      </form> 
     </div>
+  </div>
+</div>
 {% end %}
 
 {% block script %}
-    <script type="text/javascript" src="/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/js/register.js"></script>
+<script type="text/javascript" src="/js/register.js"></script>
 {% end %}
