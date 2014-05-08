@@ -16,7 +16,6 @@ class Main(BaseHandler):
         self.redirect("/pdfview")
 
 class Ping(BaseHandler):
-    @Utils.authenticated
     def get(self):
         self.write('pong')
         
