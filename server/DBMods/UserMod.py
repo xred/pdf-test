@@ -14,7 +14,15 @@ def query(**selector):
         return res
 
 def delete(**selector):
-    pass
+    for instance in session.query(User).filter_by(**selector):
+        session.delete(instance)
+    session.commit()
 
-def update(**selector):
-    pass
+def update_by_email(email,**update):
+    for instance in session.query(User).filter_by(email=email):
+        if 'password' in update:
+            instance.password = update["password"]
+    session.commit()
+
+def update(*args,**kwargs):
+    update_by_email(*args,**kwargs)
