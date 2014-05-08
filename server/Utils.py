@@ -5,6 +5,42 @@ def parse_json():
         return data
     except:
         return None
+        
+def check_type(value,Type):
+    if not Type or Type == "all":
+        return value
+    if (Type == "str" or Type == "string") and type(value) != str:
+        try:
+            return str(value)
+        except:
+            return False
+    if Type == "int" and type(value) != int:
+        try:
+            return int(value)
+        except:
+            return False
+    if Type == "float" and type(value) != float:
+        try:
+            return float(value)
+        except:
+            return False
+    if Type == "number" and type(value) != int and type(value) != float:
+        try: return int(value)
+        except: pass
+        try: return float(value)
+        except: pass
+        return False
+    if (Type == "list" or Type == "array") and type(value) != list:
+        try:
+            return list(value)
+        except:
+            return False
+    if (Type == "dict") and type(value) != dict:
+        try:
+            return dict(value)
+        except:
+            return False
+    return value
             
 def authenticated(func):
     """
@@ -46,8 +82,9 @@ def check_arguments(*request_arguments):
                             except:
                                 return self.abort(400)
                     name = name.replace("?",'',1)
+                    Type = Type.replace("?",'',1)
                     if name in obj:
-                        obj[name] = self.check_type(obj[name],Type)
+                        obj[name] = check_type(obj[name],Type)
                         if obj[name] is False:
                             return self.abort(400)
             else:
@@ -65,11 +102,13 @@ def check_arguments(*request_arguments):
                     else:
                         try:obj[name] = self.get_argument(name)
                         except: return self.abort(400)
+                    Type = Type.replace("?",'',1)
                     if name in obj:
-                        obj[name] = self.check_type(obj[name],Type)
+                        obj[name] = check_type(obj[name],Type)
                         if obj[name] is False:
                             return self.abort(400)
             self.args = obj
             return method(self,*args,**kwargs)
         return wrapper
     return func_wrapper
+

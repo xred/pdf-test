@@ -1,14 +1,23 @@
 # -*- coding:utf-8 -*-
-from Models import *
+from Models import Comment,session
+import time
 
-def add(email,password,nickname):
-    # user = User(email=email,password=password,nickname=nickname)
-    # session.add(user)
-    # session.commit();
-    pass
-
+def add(uid,aid,mid,content):
+    comment = Comment(
+        content = content,
+        userid = uid,
+        articleid = aid,
+        markid = mid,
+        replynum = 0,
+        praisenum = 0,
+        datetime = int(time.time())
+    )
+    session.add(comment)
+    session.commit()
+    return comment
+    
 def query(**selector):
-    cursor = session.query(User).filter_by(selector).all()
+    res = session.query(Comment).filter_by(**selector).all()
     if len(res) == 0:
         return None
     else:
@@ -19,17 +28,3 @@ def delete(**selector):
 
 def update(**selector):
     pass
-
-def add_reply():
-    pass
-    
-def query_reply():
-    pass
-
-def update_reply():
-    pass
-
-def delete_reply():
-    pass
-
-    
