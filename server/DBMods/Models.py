@@ -58,14 +58,13 @@ class Mark(BaseModel):
     marky = Column(Integer)
     markw = Column(Integer)
     markh = Column(Integer)
-    markx = Column(Integer)
     commentnum = Column(MEDIUMINT(8))
 
 class Comment(BaseModel):
     """a map of comment map"""
     __tablename__ = "markpaper_comment"
     commentid = Column(MEDIUMINT(8),primary_key=True)
-    articleid = Column(MEDIUMINT(8))
+    articleid = Column(VARCHAR(30))
     markid = Column(MEDIUMINT(8))
     content = Column(TEXT)
     userid = Column(MEDIUMINT(8))
@@ -73,7 +72,18 @@ class Comment(BaseModel):
     datetime = Column(Integer())
     replynum = Column(MEDIUMINT(8))
     praisenum = Column(MEDIUMINT(8))
-
+    
+class Reply(BaseModel):
+    """a map of reply map"""
+    __tablename__ = "markpaper_reply"
+    replyid = Column(MEDIUMINT(8),primary_key=True)
+    commentid = Column(MEDIUMINT(8))
+    content = Column(TEXT)
+    userid = Column(MEDIUMINT(8))
+    username = Column(VARCHAR(255))
+    datetime = Column(Integer())
+    praisenum = Column(MEDIUMINT(8))
+    
 def create_tables():
     BaseModel.metadata.create_all(engine)
 

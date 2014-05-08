@@ -46,6 +46,8 @@ handlers = [
     (r"/", Main),
     (r"/ping", Ping),
     (r"/pdfview", PDFView.Index),
+    (r"/pdfview/comment", PDFView.Comment),
+    (r"/pdfview/reply", PDFView.Reply),
     (r"/login", User.Login),
     (r"/register",User.Register),
     (r'/logout',User.Logout),

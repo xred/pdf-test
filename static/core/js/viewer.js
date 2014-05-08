@@ -1,5 +1,4 @@
 window.RunPDFViewer = function(_pdfUrl,_pdf_ready_callback){
-		console.log('use strict');
 		PDFJS.imageResourcesPath = '/core/pdfjs/web/images/';
 		PDFJS.workerSrc = '/core/pdfjs/build/pdf.worker.js';
 		PDFJS.cMapUrl = '/core/pdfjs/web/cmaps/';
@@ -2921,6 +2920,7 @@ window.RunPDFViewer = function(_pdfUrl,_pdf_ready_callback){
 																	function getDocumentCallback(pdfDocument) {
 																			self.load(pdfDocument, scale);
 																			self.loading = false;
+																			window.pdfDocument = pdfDocument;
 																	},
 																	function getDocumentError(message, exception) {
 																			var loadingErrorMessage = mozL10n.get('loading_error', null,
