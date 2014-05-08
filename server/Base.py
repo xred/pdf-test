@@ -25,4 +25,4 @@ class BaseHandler(tornado.web.RequestHandler):
         if not res:
             return None
         self.user_record = res[0]
-        return tornado.escape.xhtml_escape(username)
+        return tornado.escape.xhtml_escape(res)
