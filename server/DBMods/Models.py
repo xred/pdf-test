@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from sqlalchemy import *
 from sqlalchemy.orm import *
 from sqlalchemy.types import CHAR, Integer, String

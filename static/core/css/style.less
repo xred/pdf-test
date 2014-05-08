@@ -7,6 +7,33 @@
 #openFile,#pageRotateCw,#pageRotateCcw,.horizontalToolbarSeparator{display:none}
 .toolbar .outerCenter{right:265px !important;}
 .avatar{overflow:hidden;}
+#toolbarViewerCenter{
+		width: 200px;
+		display: inline-block;
+		position: absolute;
+		left: 50%;
+		top: 0;
+		margin-left: -100px;
+		text-align: center;
+		a{
+				&:hover .nickname{
+						color:#9DCDF7;
+				}
+		}
+		.avatar{
+				width: 24px;
+				height: 24px;
+				border-radius: 12px;
+				margin-top: -3px;
+				position: relative;
+				top: 6px;
+		}
+		.nickname{
+				color:white;
+				font-size:14px;
+				text-shadow:0 0 3px rgba(0,0,0,0.5);
+		}
+}
 html{
 		font-family:Tahoma;
 }
@@ -150,6 +177,7 @@ body{
 								border-top:1px solid #ccc;
 						}
 				}
+				ul{.transition(.2s);}
 				.single-comment-li{
 						height:88px;
 						box-sizing:border-box;
@@ -183,7 +211,7 @@ body{
 								margin:7px;
 								border-radius: 25px;
 						}
-						.id{color:#3e3e3e; margin-right:8px;}
+						.nickname{color:#3e3e3e; margin-right:8px;}
 						.date{color:#8a8a8a;font-size:12px;}
 						.content{color:@color-blue; margin-top:1px;}
 						.content-wrapper{
@@ -305,7 +333,7 @@ body{
 						top: 12px;
 						left:0;
 						padding:0 58px;
-						.id{
+						.nickname{
 								color:#3e3e3e;
 								margin-bottom:6px;
 								font-weight:bold;
@@ -378,7 +406,7 @@ body{
 				}
 				.content-wrapper{
 						margin-left:45px;
-						.id{
+						.nickname{
 								color:@color-blue;
 								font-weight:bold;
 						}
