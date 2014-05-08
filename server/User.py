@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from Base import BaseHandler
 import Utils
-import DBMods
+from DBMods import UserMod
 import MySQLdb
 conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
 cursor = conn.cursor()
@@ -16,7 +16,7 @@ class Login(BaseHandler):
         email = self.get_argument('email')
         # print email
         psw = self.get_argument('psw')
-        checkEmail = DBMods.Query.query_user(email=email)
+        checkEmail = UserMod.query(email=email)
         if checkEmail != None:
             checkPassword = checkEmail[0].password
             if checkPassword == psw:
@@ -36,12 +36,12 @@ class Register(BaseHandler):
         psw = self.get_argument('psw')
         nickname = self.get_argument('nickname')
         print nickname
-        check = DBMods.Query.query_user(email=email)
+        check = UserMod.query(email=email)
         print check
         if check is None:
             # print '1'
             res = dict(flag=1)
-            DBMods.Create.add_user(email,psw,nickname)
+            UserMod.add(email,psw,nickname)
         else:
             # print '2'
             res = dict(flag=0)
