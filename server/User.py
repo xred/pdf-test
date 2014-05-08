@@ -8,13 +8,14 @@ cursor = conn.cursor()
 
 class Login(BaseHandler):
     def get(self):
-        self.render('login.html',page='login')
+        if self.get_secure_cookie('user') is None:
+            self.render('login.html',page='login')
+        else:
+            self.redirect('/home')
     def post(self):
         email = self.get_argument('email')
         # print email
         psw = self.get_argument('psw')
-        # thePsw = cursor.execute('select password from user where email="%s"'%email)
-        # thePsw = cursor.fetchone()
         checkEmail = DBMods.Query.query_user(email=email)
         if checkEmail != None:
             checkPassword = checkEmail[0].password
@@ -50,3 +51,9 @@ class Home(BaseHandler):
     @Utils.authenticated
     def get(self):
         self.render('home.html')
+
+class Logout(BaseHandler):
+    @Utils.authenticated
+    def get(self):
+        self.clear_cookie('user')
+        self.redirect('/login')
