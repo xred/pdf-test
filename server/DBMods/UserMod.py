@@ -7,7 +7,7 @@ def add(email,password,nickname):
     session.commit();
 
 def query(**selector):
-    cursor = session.query(User).filter_by(selector).all()
+    res = session.query(User).filter_by(**selector).all()
     if len(res) == 0:
         return None
     else:
