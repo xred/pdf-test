@@ -10,6 +10,7 @@ class Login(BaseHandler):
     def get(self):
         if self.get_secure_cookie('user') is None:
             self.render('login.html',page='login')
+            # UserMod.update('fuck@fuck.fuck',password='fuck')
         else:
             self.redirect('/home')
     def post(self):
