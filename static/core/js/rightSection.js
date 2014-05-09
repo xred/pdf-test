@@ -122,22 +122,68 @@
     function RightSection(app) {
       RightSection.__super__.constructor.call(this, "#right-section");
       this.app = app;
-      this.pages = [];
+      this.commentsItems = [];
+      this.rightSectionPages = [];
       this.pageStack = [];
       this.init();
     }
 
     RightSection.prototype.init = function() {
-      var i, item, _i;
+      var self;
       this.commentPage = new RightSectionPage(this.UI['comment-page']);
+      self = this;
       this.editPage = new EditPage(this.UI['edit-page']);
       this.singleCommentPage = new SingleCommentPage(this.UI['single-comment-page']);
-      this.pages = [this.commentPage, this.editPage, this.singleCommentPage];
-      for (i = _i = 1; _i <= 5; i = ++_i) {
-        item = new CommentsItem(this, []);
-        item.appendTo(this.UI['comments-wrapper']);
-      }
+      this.rightSectionPages = [this.commentPage, this.editPage, this.singleCommentPage];
+      this.initComments();
       return this.goInto(this.commentPage);
+    };
+
+    RightSection.prototype.initComments = function() {
+      var i, item, m, _i, _j, _len, _len1, _ref2, _ref3;
+      _ref2 = this.commentsItems;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        i = _ref2[_i];
+        i.remove();
+      }
+      this.commentsItems = [];
+      _ref3 = this.app.marks;
+      for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+        m = _ref3[_j];
+        item = new CommentsItem(this, m.comments);
+        item.markData = m;
+        item.appendTo(this.UI['comments-wrapper']);
+        this.commentsItems.push(item);
+        this.UI['comments-wrapper'].J.css("padding-bottom", window.screen.height);
+      }
+      return this;
+    };
+
+    RightSection.prototype.scrollToMarkComments = function(markData, markWidget) {
+      var ci, paddingTop, targetTop, _i, _len, _ref2,
+        _this = this;
+      paddingTop = 30;
+      _ref2 = this.commentsItems;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        ci = _ref2[_i];
+        if (ci.markData.markid === markData.markid) {
+          ci.J.siblings().removeClass("focus");
+          targetTop = ci.dom.offsetTop - paddingTop;
+          this.commentPage.J.animate({
+            scrollTop: targetTop
+          }, "normal", "swing", function() {
+            return ci.J.addClass("focus");
+          });
+          return true;
+        }
+      }
+    };
+
+    RightSection.prototype.resetStack = function() {
+      var last;
+      this.pageStack = [];
+      last = null;
+      return this;
     };
 
     RightSection.prototype.goInto = function(page) {
@@ -147,7 +193,8 @@
         last.leaveToLeft();
       }
       this.pageStack.push(page);
-      return page.enterFromRight();
+      page.enterFromRight();
+      return this;
     };
 
     RightSection.prototype.goBack = function() {
@@ -158,7 +205,8 @@
         return false;
       }
       current.leaveToRight();
-      return this.pageStack[this.pageStack.length - 1].enterFromLeft();
+      this.pageStack[this.pageStack.length - 1].enterFromLeft();
+      return this;
     };
 
     RightSection.prototype.showNewCommentHint = function() {
@@ -221,7 +269,7 @@
         _this = this;
       CommentsItem.__super__.constructor.call(this, window.tpls['comments-item']);
       this.rightSection = rightSection;
-      this.comments = comments = [1, 2, 3, 4, 5, 6, 7, 8];
+      this.comments = comments;
       this.toggleItems = [];
       this.unfoldBtn = null;
       this.folded = true;
@@ -285,6 +333,10 @@
       }
       item = new Suzaku.Widget(this.UI['single-comment-li-tpl'].J.html());
       item.data = data;
+      item.UI.content.J.html(data.content);
+      item.UI.nickname.J.text(data.nickname);
+      item.UI['reply-num'].J.text(data.replynum);
+      item.UI['vote-up-num'].J.text(data.praisenum);
       item.dom.onclick = function() {
         return _this.rightSection.showSingleComment(item.data);
       };

@@ -29,8 +29,17 @@ class App extends Suzaku.EventEmitter
   newCommentLock = false
   constructor:->
     super
+    @marks = []
+    @comments = []
+    @aid = window.pdfDocument.fingerprint
     am = new Suzaku.ApiManager
-    am.setPath ""
+    am.setPath "/pdfview/"
+    am.setMethod "get"
+    am.declare "getComments","/comment",["aid=#{@aid}"]
+    am.setMethod "post"
+    am.declare "addComment","/comment",["action=add","aid=#{@aid}","content","markdata"]
+    am.declare "addCommentToMark","/comment",["action=add","aid=#{@aid}","content","markid"]
+    @api = am.generate()
     tm = new Suzaku.TemplateManager
     tm.setPath "/core/templates/"
     tm.use "comments-item","rect-mark","single-comment-item"
@@ -38,14 +47,28 @@ class App extends Suzaku.EventEmitter
       window.tpls = tpls
       @start()
   start:->
-    @pages = []
-    for p in pages = $(".page")
-      @pages.push(new Page(this,p))
-    @rightSection = new RightSection this
-    $("#newComment").on "click",=>
-      return false if newCommentLock
-      $("#newComment").addClass "toggled"
-      @newComment()
+    @initComments =>
+      @pages = []
+      for p in pages = $(".page")
+        @pages.push(new Page(this,p))
+      @rightSection = new RightSection this
+      $("#newComment").on "click",=>
+        return false if newCommentLock
+        $("#newComment").addClass "toggled"
+        @newComment()
+  initComments:(callback)->
+    call = @api.getComments (res)=>
+      if res.success
+        @comments = res.comments
+        @marks = res.marks
+        #merge comments
+        for m in @marks
+          m.comments = []
+          for c in @comments when c.markid is m.markid
+            m.comments.push c
+      callback() if callback
+    call.fail =>
+      console.error "cannot get comments",arguments
   newComment:()->
     newCommentLock = true
     @emit "newComment"
@@ -64,25 +87,35 @@ class App extends Suzaku.EventEmitter
     @rightSection.showEditPage "newComment",null,success,fail
   newCommentSuccessed:(page,content)->
     newCommentLock = false
-    page.newCommentCompleted()
+    markData = page.getTempMarkData()
     $("#newComment").removeClass "toggled"
-    console.log "new comment page:",targetPage,"content:",content
-    targetPage.initUserMarks()
+    console.log "new comment page:",page,"content:",content
+    page.newCommentCompleted()
+    call = @api.addComment content,markData,(res)=>
+      if not res.success
+        console.error res.error_msg
+      @initComments =>
+        @rightSection.initComments().resetStack().goInto @rightSection.commentPage
+        page.initMarks()
   newCommentCanceled:(page)->
     newCommentLock = false
     if page then page.newCommentCompleted()
     else for p in @pages
       p.newCommentCompleted()
     $("#newComment").removeClass "toggled"
-  initUserMarks:->
-    for page in @pages
-      page.initUserMarks
 
 class RectMark extends Suzaku.Widget
-  constructor:(type="normal")->
+  constructor:(type="normal",data)->
     super window.tpls['rect-mark']
     if type is "temp"
       @tempType()
+    else
+      @J.css
+        left:data.markx
+        top:data.marky
+        width:data.markw
+        height:data.markh
+        color:data.markcolor
   tempType:->
     @J.addClass "temp"
     @dom.onmousedown = (evt)=>
@@ -91,7 +124,7 @@ class RectMark extends Suzaku.Widget
       evt.stopPropagation()
       evt.preventDefault()
       @emit "resize",evt.clientX,evt.clientY
-  getInfo:->
+  getData:->
     obj = 
       left:@dom.offsetLeft
       top:@dom.offsetTop
@@ -102,12 +135,13 @@ class RectMark extends Suzaku.Widget
 class Page extends Suzaku.Widget
   constructor:(app,pageContainerDom)->
     super pageContainerDom
-    id = @dom.id.replace "pageContainer",""
+    @pageid = parseInt(@dom.id.replace "pageContainer","")
     @markingWrapper = new Suzaku.Widget "<div class='marking-wrapper'></div>"
     @markingWrapper.appendTo @dom
     @textLayerJ = @J.find('.textLayer')
-    @marks = []
     @app = app
+    @marks = []
+    @initMarks()
     app.on "newComment",=>
       @newCommentActive()
     app.on "newComment:confirm",=>
@@ -152,7 +186,7 @@ class Page extends Suzaku.Widget
       @tempRectMark.J.css left:left,top:top,width:width,height:height
   newCommentConfirm:->
     action = "none"
-    defaultInfo = @tempRectMark.getInfo()
+    defaultData = @tempRectMark.getData()
     @tempRectMark.on "drag",(x,y)=>
       @mouseStartPos = x:x,y:y
       action = "drag"
@@ -163,30 +197,52 @@ class Page extends Suzaku.Widget
       return false if not @mouseStartPos
       action = "none"
       @mouseStartPos = null
-      defaultInfo = @tempRectMark.getInfo()
+      defaultData = @tempRectMark.getData()
     window.globalMouseListener.on "mousemove","newCommentConfirm",(evt)=>
       return false if not @mouseStartPos
       dx = evt.clientX - @mouseStartPos.x
       dy = evt.clientY - @mouseStartPos.y
       switch action
         when "drag"
-          @tempRectMark.J.css left:(defaultInfo.left + dx),top:(defaultInfo.top + dy)
+          @tempRectMark.J.css left:(defaultData.left + dx),top:(defaultData.top + dy)
         when "resize"
-          width = (defaultInfo.width + dx)
-          height = (defaultInfo.height + dy)
+          width = (defaultData.width + dx)
+          height = (defaultData.height + dy)
           if width < 5 then width = 5
           if height < 5 then height = 5
           @tempRectMark.J.css width:width,height:height
         else console.log "error status",action
+  getTempMarkData:->
+    data = @tempRectMark.getData()
+    obj =
+      x:data.left
+      y:data.top
+      w:data.width
+      h:data.height
+      pageid:@pageid
+      color:1
+    return obj
   newCommentCompleted:->
     return false if not @tempRectMark
     window.globalMouseListener.off "mouseup","newCommentConfirm"
     window.globalMouseListener.off "mousemove","newCommentConfirm"
     @tempRectMark.remove()
     @tempRectMark = null
-  initUserMarks:(marks)->
-    "show user marks"
+  initMarks:()->
+    console.log "fuck"
+    m.remove() for m in @marks
+    @marks = []
+    for m in @app.marks when m.pageid is @pageid
+      @marks.push @addMark m
     return true
+  addMark:(markData)->
+    item = new RectMark "normal",markData
+    item.markData = markData
+    item.appendTo @markingWrapper
+    item.dom.onclick = =>
+      console.log "click",item
+      @app.rightSection.scrollToMarkComments item.markData,item
+    return item
       
 RunPDFViewer pdfUrl,=>
   window.globalMouseListener = new GlobalMouseListener()

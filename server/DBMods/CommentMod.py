@@ -1,11 +1,12 @@
 # -*- coding:utf-8 -*-
-from Models import Comment,session
+from Models import Comment,session,queryWrapper
 import time
 
-def add(uid,aid,mid,content):
+def add(uid,nickname,aid,mid,content):
     comment = Comment(
         content = content,
         userid = uid,
+        nickname = nickname,
         articleid = aid,
         markid = mid,
         replynum = 0,
@@ -16,12 +17,9 @@ def add(uid,aid,mid,content):
     session.commit()
     return comment
     
+@queryWrapper    
 def query(**selector):
-    res = session.query(Comment).filter_by(**selector).all()
-    if len(res) == 0:
-        return None
-    else:
-        return res
+    return session.query(Comment).filter_by(**selector).all()
 
 def delete(**selector):
     pass
