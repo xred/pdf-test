@@ -42,7 +42,7 @@ class Register(BaseHandler):
 class Home(BaseHandler):
     @Utils.authenticated
     def get(self):
-        self.render('home.html')
+        self.render('home.html',nickname=self.user_record.nickname)
 
 class Logout(BaseHandler):
     @Utils.authenticated
