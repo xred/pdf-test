@@ -96,13 +96,23 @@
           _this.pages.push(new Page(_this, p));
         }
         _this.rightSection = new RightSection(_this);
-        return $("#newComment").on("click", function() {
+        $("#newComment").on("click", function() {
           if (newCommentLock) {
             return false;
           }
           $("#newComment").addClass("toggled");
           return _this.newComment();
         });
+        return window.onresize = function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = _this.pages;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            p = _ref1[_j];
+            _results.push(p.onresize());
+          }
+          return _results;
+        };
       });
     };
 
@@ -202,7 +212,7 @@
   RectMark = (function(_super) {
     __extends(RectMark, _super);
 
-    function RectMark(type, data) {
+    function RectMark(type, pageSize, data) {
       if (type == null) {
         type = "normal";
       }
@@ -210,15 +220,24 @@
       if (type === "temp") {
         this.tempType();
       } else {
+        this.data = data;
         this.J.css({
-          left: data.markx,
-          top: data.marky,
-          width: data.markw,
-          height: data.markh,
           color: data.markcolor
         });
+        this.updateSize(pageSize);
       }
     }
+
+    RectMark.prototype.updateSize = function(pageSize) {
+      var a;
+      a = 100;
+      return this.J.css({
+        left: this.data.markx * pageSize.width / a,
+        top: this.data.marky * pageSize.width / a,
+        width: this.data.markw * pageSize.width / a,
+        height: this.data.markh * pageSize.width / a
+      });
+    };
 
     RectMark.prototype.tempType = function() {
       var _this = this;
@@ -273,6 +292,30 @@
         }
       });
     }
+
+    Page.prototype.onresize = function() {
+      var m, pageSize, _i, _len, _ref, _results;
+      this.J = $("body #" + this.dom.id);
+      this.dom = this.J.get(0);
+      this.markingWrapper.appendTo(this.dom);
+      pageSize = this.getPageSize();
+      _ref = this.marks;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        m = _ref[_i];
+        _results.push(m.updateSize(pageSize));
+      }
+      return _results;
+    };
+
+    Page.prototype.getPageSize = function() {
+      var obj;
+      obj = {
+        width: parseFloat(this.J.css("width").replace("px", "")),
+        height: parseFloat(this.J.css("height").replace("px", ""))
+      };
+      return obj;
+    };
 
     Page.prototype.clearListeners = function() {
       this.dom.onmouseup = null;
@@ -402,13 +445,15 @@
     };
 
     Page.prototype.getTempMarkData = function() {
-      var data, obj;
+      var a, data, obj, pageSize;
       data = this.tempRectMark.getData();
+      pageSize = this.getPageSize();
+      a = 100;
       obj = {
-        x: data.left,
-        y: data.top,
-        w: data.width,
-        h: data.height,
+        x: data.left / pageSize.width * a,
+        y: data.top / pageSize.height * a,
+        w: data.width / pageSize.width * a,
+        h: data.height / pageSize.height * a,
         pageid: this.pageid,
         color: 1
       };
@@ -426,32 +471,31 @@
     };
 
     Page.prototype.initMarks = function() {
-      var m, _i, _j, _len, _len1, _ref, _ref1;
-      console.log("fuck");
+      var m, pageSize, _i, _j, _len, _len1, _ref, _ref1;
       _ref = this.marks;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         m = _ref[_i];
         m.remove();
       }
       this.marks = [];
+      pageSize = this.getPageSize();
       _ref1 = this.app.marks;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         m = _ref1[_j];
         if (m.pageid === this.pageid) {
-          this.marks.push(this.addMark(m));
+          this.marks.push(this.addMark(pageSize, m));
         }
       }
       return true;
     };
 
-    Page.prototype.addMark = function(markData) {
+    Page.prototype.addMark = function(pageSize, markData) {
       var item,
         _this = this;
-      item = new RectMark("normal", markData);
+      item = new RectMark("normal", pageSize, markData);
       item.markData = markData;
       item.appendTo(this.markingWrapper);
       item.dom.onclick = function() {
-        console.log("click", item);
         return _this.app.rightSection.scrollToMarkComments(item.markData, item);
       };
       return item;

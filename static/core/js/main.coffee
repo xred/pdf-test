@@ -56,6 +56,9 @@ class App extends Suzaku.EventEmitter
         return false if newCommentLock
         $("#newComment").addClass "toggled"
         @newComment()
+      window.onresize = =>
+        for p in @pages
+          p.onresize()
   initComments:(callback)->
     call = @api.getComments (res)=>
       if res.success
@@ -105,17 +108,21 @@ class App extends Suzaku.EventEmitter
     $("#newComment").removeClass "toggled"
 
 class RectMark extends Suzaku.Widget
-  constructor:(type="normal",data)->
+  constructor:(type="normal",pageSize,data)->
     super window.tpls['rect-mark']
     if type is "temp"
       @tempType()
     else
-      @J.css
-        left:data.markx
-        top:data.marky
-        width:data.markw
-        height:data.markh
-        color:data.markcolor
+      @data = data
+      @J.css color:data.markcolor
+      @updateSize pageSize
+  updateSize:(pageSize)->
+    a = 100
+    @J.css
+      left:@data.markx * pageSize.width / a
+      top:@data.marky * pageSize.width / a
+      width:@data.markw * pageSize.width / a
+      height:@data.markh * pageSize.width / a
   tempType:->
     @J.addClass "temp"
     @dom.onmousedown = (evt)=>
@@ -149,6 +156,17 @@ class Page extends Suzaku.Widget
     app.on "newComment:active",(page)=>
       if page isnt this
         @clearListeners()
+  onresize:->
+    @J = $("body ##{@dom.id}")
+    @dom = @J.get(0)
+    @markingWrapper.appendTo @dom
+    pageSize = @getPageSize()
+    m.updateSize pageSize for m in @marks
+  getPageSize:->
+    obj = 
+      width:parseFloat(@J.css("width").replace("px",""))
+      height:parseFloat(@J.css("height").replace("px",""))
+    return obj
   clearListeners:->
     @dom.onmouseup = null
     @dom.onmousedown = null
@@ -214,11 +232,13 @@ class Page extends Suzaku.Widget
         else console.log "error status",action
   getTempMarkData:->
     data = @tempRectMark.getData()
+    pageSize = @getPageSize()
+    a = 100
     obj =
-      x:data.left
-      y:data.top
-      w:data.width
-      h:data.height
+      x:data.left/pageSize.width*a
+      y:data.top/pageSize.height*a
+      w:data.width/pageSize.width*a
+      h:data.height/pageSize.height*a
       pageid:@pageid
       color:1
     return obj
@@ -229,18 +249,17 @@ class Page extends Suzaku.Widget
     @tempRectMark.remove()
     @tempRectMark = null
   initMarks:()->
-    console.log "fuck"
     m.remove() for m in @marks
     @marks = []
+    pageSize = @getPageSize()
     for m in @app.marks when m.pageid is @pageid
-      @marks.push @addMark m
+      @marks.push @addMark pageSize,m
     return true
-  addMark:(markData)->
-    item = new RectMark "normal",markData
+  addMark:(pageSize,markData)->
+    item = new RectMark "normal",pageSize,markData
     item.markData = markData
     item.appendTo @markingWrapper
     item.dom.onclick = =>
-      console.log "click",item
       @app.rightSection.scrollToMarkComments item.markData,item
     return item
       
