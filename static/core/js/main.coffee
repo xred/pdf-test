@@ -113,6 +113,7 @@ class RectMark extends Suzaku.Widget
     if type is "temp"
       @tempType()
     else
+      console.log data
       @data = data
       @J.css color:data.markcolor
       @updateSize pageSize
@@ -120,9 +121,9 @@ class RectMark extends Suzaku.Widget
     a = 100
     @J.css
       left:@data.markx * pageSize.width / a
-      top:@data.marky * pageSize.width / a
+      top:@data.marky * pageSize.height / a
       width:@data.markw * pageSize.width / a
-      height:@data.markh * pageSize.width / a
+      height:@data.markh * pageSize.height / a
   tempType:->
     @J.addClass "temp"
     @dom.onmousedown = (evt)=>

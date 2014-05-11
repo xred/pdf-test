@@ -220,6 +220,7 @@
       if (type === "temp") {
         this.tempType();
       } else {
+        console.log(data);
         this.data = data;
         this.J.css({
           color: data.markcolor
@@ -233,9 +234,9 @@
       a = 100;
       return this.J.css({
         left: this.data.markx * pageSize.width / a,
-        top: this.data.marky * pageSize.width / a,
+        top: this.data.marky * pageSize.height / a,
         width: this.data.markw * pageSize.width / a,
-        height: this.data.markh * pageSize.width / a
+        height: this.data.markh * pageSize.height / a
       });
     };
 
