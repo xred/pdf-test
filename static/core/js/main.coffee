@@ -106,6 +106,18 @@ class App extends Suzaku.EventEmitter
     else for p in @pages
       p.newCommentCompleted()
     $("#newComment").removeClass "toggled"
+  getPageById:(pageid)->
+    res = page for page in @pages when parseInt(pageid) is parseInt(page.pageid)
+    return res
+  scrollToRectMark:(markData)->
+    console.log markData
+    page = @getPageById markData.pageid
+    targetTop = page.dom.offsetTop
+    console.log page,markData.pageid,page.dom.offsetTop
+    $(".rectMark").removeClass "focus"
+    $("#viewerContainer").animate scrollTop:targetTop,"normal","swing",=>
+      $("#mark-#{markData.markid}").addClass "focus"
+    return true
 
 class RectMark extends Suzaku.Widget
   constructor:(type="normal",pageSize,data)->
@@ -115,6 +127,8 @@ class RectMark extends Suzaku.Widget
     else
       console.log data
       @data = data
+      @id = data.markid
+      @dom.id = "mark-#{@id}"
       @J.css color:data.markcolor
       @updateSize pageSize
   updateSize:(pageSize)->

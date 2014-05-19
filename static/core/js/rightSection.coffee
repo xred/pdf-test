@@ -57,8 +57,7 @@ class window.RightSection extends Suzaku.Widget
     i.remove() for i in @commentsItems
     @commentsItems = []
     for m in @app.marks
-      item = new CommentsItem this,m.comments
-      item.markData = m
+      item = new CommentsItem this,m.comments,m
       item.appendTo @UI['comments-wrapper']
       @commentsItems.push item
       @UI['comments-wrapper'].J.css "padding-bottom",window.screen.height
@@ -118,15 +117,20 @@ class window.RightSection extends Suzaku.Widget
     @singleCommentPage.UI['back'].onclick = =>
       @goBack()
     @goInto @singleCommentPage
+  commentsItemOnclick:(commentsItem)->
+    @app.scrollToRectMark commentsItem.markData
         
 class CommentsItem extends Suzaku.Widget
-  constructor:(rightSection,comments)->
+  constructor:(rightSection,comments,markData)->
     super window.tpls['comments-item']
     @rightSection = rightSection
     @comments = comments
+    @markData = markData
     @toggleItems = []
     @unfoldBtn = null
     @folded = true
+    @dom.onclick = =>
+      @rightSection.commentsItemOnclick this
     if @comments.length > 3
       first = @addItem @comments[0]
       @insertUnfoldBtn first

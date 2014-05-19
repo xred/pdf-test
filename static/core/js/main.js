@@ -205,6 +205,34 @@
       return $("#newComment").removeClass("toggled");
     };
 
+    App.prototype.getPageById = function(pageid) {
+      var page, res, _i, _len, _ref;
+      _ref = this.pages;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        page = _ref[_i];
+        if (parseInt(pageid) === parseInt(page.pageid)) {
+          res = page;
+        }
+      }
+      return res;
+    };
+
+    App.prototype.scrollToRectMark = function(markData) {
+      var page, targetTop,
+        _this = this;
+      console.log(markData);
+      page = this.getPageById(markData.pageid);
+      targetTop = page.dom.offsetTop;
+      console.log(page, markData.pageid, page.dom.offsetTop);
+      $(".rectMark").removeClass("focus");
+      $("#viewerContainer").animate({
+        scrollTop: targetTop
+      }, "normal", "swing", function() {
+        return $("#mark-" + markData.markid).addClass("focus");
+      });
+      return true;
+    };
+
     return App;
 
   })(Suzaku.EventEmitter);
@@ -222,6 +250,8 @@
       } else {
         console.log(data);
         this.data = data;
+        this.id = data.markid;
+        this.dom.id = "mark-" + this.id;
         this.J.css({
           color: data.markcolor
         });

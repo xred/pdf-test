@@ -11,7 +11,8 @@ def add(uid,nickname,aid,mid,content):
         markid = mid,
         replynum = 0,
         praisenum = 0,
-        datetime = int(time.time())
+        datetime = int(time.time()),
+        commentnum = 1
     )
     session.add(comment)
     session.commit()

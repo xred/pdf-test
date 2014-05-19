@@ -2,9 +2,6 @@
 from Base import BaseHandler
 import Utils
 from DBMods import UserMod
-import MySQLdb
-conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
-cursor = conn.cursor()
 
 class Login(BaseHandler):
     def get(self):

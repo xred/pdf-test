@@ -150,8 +150,7 @@
       _ref3 = this.app.marks;
       for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
         m = _ref3[_j];
-        item = new CommentsItem(this, m.comments);
-        item.markData = m;
+        item = new CommentsItem(this, m.comments, m);
         item.appendTo(this.UI['comments-wrapper']);
         this.commentsItems.push(item);
         this.UI['comments-wrapper'].J.css("padding-bottom", window.screen.height);
@@ -257,6 +256,10 @@
       return this.goInto(this.singleCommentPage);
     };
 
+    RightSection.prototype.commentsItemOnclick = function(commentsItem) {
+      return this.app.scrollToRectMark(commentsItem.markData);
+    };
+
     return RightSection;
 
   })(Suzaku.Widget);
@@ -264,15 +267,19 @@
   CommentsItem = (function(_super) {
     __extends(CommentsItem, _super);
 
-    function CommentsItem(rightSection, comments) {
+    function CommentsItem(rightSection, comments, markData) {
       var c, first, _i, _len, _ref2,
         _this = this;
       CommentsItem.__super__.constructor.call(this, window.tpls['comments-item']);
       this.rightSection = rightSection;
       this.comments = comments;
+      this.markData = markData;
       this.toggleItems = [];
       this.unfoldBtn = null;
       this.folded = true;
+      this.dom.onclick = function() {
+        return _this.rightSection.commentsItemOnclick(_this);
+      };
       if (this.comments.length > 3) {
         first = this.addItem(this.comments[0]);
         this.insertUnfoldBtn(first);
