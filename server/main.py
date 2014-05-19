@@ -33,6 +33,7 @@ settings = {
     "debug":True,
     "static_path":os.path.join(current_path,"../static"),
     "template_path":os.path.join(current_path,"../templates"),
+    "ui_modules":{'HomePaperItem': User.HomePaperItemModule},
     "autoescape":None,
     "port":8005,
 }
