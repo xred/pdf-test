@@ -41,24 +41,46 @@ class window.RightSection extends Suzaku.Widget
   constructor:(app)->
     super "#right-section"
     @app = app
-    @pages = []
+    @commentsItems = []
+    @rightSectionPages = []
     @pageStack = []
     @init()
   init:->
     @commentPage = new RightSectionPage @UI['comment-page']
+    self = this
     @editPage = new EditPage @UI['edit-page']
     @singleCommentPage = new SingleCommentPage @UI['single-comment-page']
-    @pages = [@commentPage,@editPage,@singleCommentPage]
-    #init comments
-    for i in [1..5]
-      item = new CommentsItem this,[]
-      item.appendTo @UI['comments-wrapper']
+    @rightSectionPages = [@commentPage,@editPage,@singleCommentPage]
+    @initComments()
     @goInto @commentPage
+  initComments:->
+    i.remove() for i in @commentsItems
+    @commentsItems = []
+    for m in @app.marks
+      item = new CommentsItem this,m.comments,m
+      item.appendTo @UI['comments-wrapper']
+      @commentsItems.push item
+      @UI['comments-wrapper'].J.css "padding-bottom",window.screen.height
+    return this
+  scrollToMarkComments:(markData,markWidget)->
+    paddingTop = 30
+    for ci in @commentsItems
+      if ci.markData.markid is markData.markid
+        ci.J.siblings().removeClass "focus"
+        targetTop = ci.dom.offsetTop - paddingTop
+        @commentPage.J.animate scrollTop:targetTop,"normal","swing",=>
+          ci.J.addClass "focus"          
+        return true
+  resetStack:->
+    @pageStack = []
+    last = null
+    return this
   goInto:(page)->
     last = @pageStack[@pageStack.length - 1]
     if last then last.leaveToLeft()
     @pageStack.push page
     page.enterFromRight()
+    return this
   goBack:->
     current = @pageStack.pop()
     if not current
@@ -66,6 +88,7 @@ class window.RightSection extends Suzaku.Widget
       return false
     current.leaveToRight()
     @pageStack[@pageStack.length - 1].enterFromLeft()
+    return this
   showNewCommentHint:->
     hintJ = @UI['new-comment-hint'].J
     contentJ = hintJ.find(".content")
@@ -94,15 +117,20 @@ class window.RightSection extends Suzaku.Widget
     @singleCommentPage.UI['back'].onclick = =>
       @goBack()
     @goInto @singleCommentPage
+  commentsItemOnclick:(commentsItem)->
+    @app.scrollToRectMark commentsItem.markData
         
 class CommentsItem extends Suzaku.Widget
-  constructor:(rightSection,comments)->
+  constructor:(rightSection,comments,markData)->
     super window.tpls['comments-item']
     @rightSection = rightSection
-    @comments = comments = [1..8]
+    @comments = comments
+    @markData = markData
     @toggleItems = []
     @unfoldBtn = null
     @folded = true
+    @dom.onclick = =>
+      @rightSection.commentsItemOnclick this
     if @comments.length > 3
       first = @addItem @comments[0]
       @insertUnfoldBtn first
@@ -131,6 +159,10 @@ class CommentsItem extends Suzaku.Widget
   addItem:(data,animate = false)->
     item = new Suzaku.Widget @UI['single-comment-li-tpl'].J.html()
     item.data = data
+    item.UI.content.J.html data.content
+    item.UI.nickname.J.text data.nickname
+    item.UI['reply-num'].J.text data.replynum
+    item.UI['vote-up-num'].J.text data.praisenum
     item.dom.onclick = => @rightSection.showSingleComment item.data
     item.appendTo @UI.list
     return item

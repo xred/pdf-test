@@ -4,22 +4,33 @@ import Utils
 from DBMods import CommentMod,MarkMod,ReplyMod
 
 class Index(BaseHandler):
+    @Utils.authenticated
     def get(self):
-        self.render("pdfview.html")
+        self.render("pdfview.html",nickname=self.user_record.nickname)
         
 class Comment(BaseHandler):
-    @Utils.check_arguments("aid:int","id:int?","markid:int?")
+    @Utils.check_arguments("aid","id:int?","markid:int?")
     def get(self):
         """
         Get single comments or all comment for one article
         """
         if "id" in self.args:
-            res = CommentMod.query(commentid = self.args["id"])
+            comments = CommentMod.query(True,commentid = self.args["id"])
+            if comments:
+                self.write(dict(success = True,comment = comments[0]))
+            else:
+                self.write(dict(success = True,comment = None))
         elif "markid" in self.args:
-            res = CommentMod.query(markid = self.args['markid'])
+            comments = CommentMod.query(True,markid = self.args['markid'])
+            if not comments : comments = []
+            self.write(dict(success = True,comments = comments))
         else:
-            res = CommentMod.query(articleid = self.args['aid'])
-        self.write(dict(success = True,comments = res))
+            comments = CommentMod.query(True,articleid = self.args['aid'])
+            marks = MarkMod.query(True,articleid = self.args['aid'])
+            print comments,marks
+            if not comments : comments = []
+            if not marks: marks = []
+            self.write(dict(success = True,comments = comments,marks = marks))
 
     @Utils.authenticated
     @Utils.check_arguments("action")
@@ -44,21 +55,30 @@ class Comment(BaseHandler):
             mid = self.args["markid"]
             if not MarkMod.query(markid = mid):
                 return self.write(dict(success = False,error_msg = "invailid markid"))
-            CommentMod.add(self.user_record['uid'],aid,mid,content)
+            uid = self.user_record.uid
+            nickname = self.user_record.nickname
+            new_comment = CommentMod.add(uid,nickname,aid,mid,content)
+            self.write(dict(success=True,commentid=new_comment.commentid))
         elif "markdata" in self.args:
-            data = self.args['markdata']
-            try:
-                x = data["x"]
-                y = data["y"]
-                w = data["w"]
-                h = data['h']
-            except:
-                self.abort(400)
-            new_mark = MarkMod.add(x,y,w,h)
+            new_mark = self.add_mark(self.args["markdata"])
+            if not new_mark:
+                return self.abort(400)
             mid = new_mark.markid
-            CommentMod.add(self.user_record['uid'],aid,mid,content)
+            uid = self.user_record.uid
+            nickname = self.user_record.nickname
+            new_comment = CommentMod.add(uid,nickname,aid,mid,content)
+            self.write(dict(success=True,commentid=new_comment.commentid))
         else:
             self.abort(400)
+    def add_mark(self,data):
+        x = data["x"]
+        y = data["y"]
+        w = data["w"]
+        h = data['h']
+        pageid = data['pageid']
+        color = data['color']
+        new_mark = MarkMod.add(self.args['aid'],pageid,x,y,w,h,color)
+        return new_mark
     def update_content(self):
         pass
     def voteup(self):

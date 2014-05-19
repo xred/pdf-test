@@ -1,17 +1,14 @@
 # -*- coding:utf-8 -*-
-from Models import *
+from Models import User,session,queryWrapper
 
 def add(email,password,nickname):
     user = User(email=email,password=password,nickname=nickname)
     session.add(user)
     session.commit();
 
+@queryWrapper    
 def query(**selector):
-    res = session.query(User).filter_by(**selector).all()
-    if len(res) == 0:
-        return None
-    else:
-        return res
+    return session.query(User).filter_by(**selector).all()
 
 def delete(**selector):
     for instance in session.query(User).filter_by(**selector):
@@ -26,3 +23,6 @@ def update_by_email(email,**update):
 
 def update(*args,**kwargs):
     update_by_email(*args,**kwargs)
+
+if not query(nickname = "test"):
+    add("test@test.com","123456","test")

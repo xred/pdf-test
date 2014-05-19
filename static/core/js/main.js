@@ -65,8 +65,17 @@
       var am, tm,
         _this = this;
       App.__super__.constructor.apply(this, arguments);
+      this.marks = [];
+      this.comments = [];
+      this.aid = window.pdfDocument.fingerprint;
       am = new Suzaku.ApiManager;
-      am.setPath("");
+      am.setPath("/pdfview/");
+      am.setMethod("get");
+      am.declare("getComments", "/comment", ["aid=" + this.aid]);
+      am.setMethod("post");
+      am.declare("addComment", "/comment", ["action=add", "aid=" + this.aid, "content", "markdata"]);
+      am.declare("addCommentToMark", "/comment", ["action=add", "aid=" + this.aid, "content", "markid"]);
+      this.api = am.generate();
       tm = new Suzaku.TemplateManager;
       tm.setPath("/core/templates/");
       tm.use("comments-item", "rect-mark", "single-comment-item");
@@ -77,21 +86,63 @@
     }
 
     App.prototype.start = function() {
-      var p, pages, _i, _len, _ref,
-        _this = this;
-      this.pages = [];
-      _ref = pages = $(".page");
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        p = _ref[_i];
-        this.pages.push(new Page(this, p));
-      }
-      this.rightSection = new RightSection(this);
-      return $("#newComment").on("click", function() {
-        if (newCommentLock) {
-          return false;
+      var _this = this;
+      return this.initComments(function() {
+        var p, pages, _i, _len, _ref;
+        _this.pages = [];
+        _ref = pages = $(".page");
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          p = _ref[_i];
+          _this.pages.push(new Page(_this, p));
         }
-        $("#newComment").addClass("toggled");
-        return _this.newComment();
+        _this.rightSection = new RightSection(_this);
+        $("#newComment").on("click", function() {
+          if (newCommentLock) {
+            return false;
+          }
+          $("#newComment").addClass("toggled");
+          return _this.newComment();
+        });
+        return window.onresize = function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = _this.pages;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            p = _ref1[_j];
+            _results.push(p.onresize());
+          }
+          return _results;
+        };
+      });
+    };
+
+    App.prototype.initComments = function(callback) {
+      var call,
+        _this = this;
+      call = this.api.getComments(function(res) {
+        var c, m, _i, _j, _len, _len1, _ref, _ref1;
+        if (res.success) {
+          _this.comments = res.comments;
+          _this.marks = res.marks;
+          _ref = _this.marks;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            m = _ref[_i];
+            m.comments = [];
+            _ref1 = _this.comments;
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              c = _ref1[_j];
+              if (c.markid === m.markid) {
+                m.comments.push(c);
+              }
+            }
+          }
+        }
+        if (callback) {
+          return callback();
+        }
+      });
+      return call.fail(function() {
+        return console.error("cannot get comments", arguments);
       });
     };
 
@@ -121,11 +172,22 @@
     };
 
     App.prototype.newCommentSuccessed = function(page, content) {
+      var call, markData,
+        _this = this;
       newCommentLock = false;
-      page.newCommentCompleted();
+      markData = page.getTempMarkData();
       $("#newComment").removeClass("toggled");
-      console.log("new comment page:", targetPage, "content:", content);
-      return targetPage.initUserMarks();
+      console.log("new comment page:", page, "content:", content);
+      page.newCommentCompleted();
+      return call = this.api.addComment(content, markData, function(res) {
+        if (!res.success) {
+          console.error(res.error_msg);
+        }
+        return _this.initComments(function() {
+          _this.rightSection.initComments().resetStack().goInto(_this.rightSection.commentPage);
+          return page.initMarks();
+        });
+      });
     };
 
     App.prototype.newCommentCanceled = function(page) {
@@ -143,15 +205,32 @@
       return $("#newComment").removeClass("toggled");
     };
 
-    App.prototype.initUserMarks = function() {
-      var page, _i, _len, _ref, _results;
+    App.prototype.getPageById = function(pageid) {
+      var page, res, _i, _len, _ref;
       _ref = this.pages;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         page = _ref[_i];
-        _results.push(page.initUserMarks);
+        if (parseInt(pageid) === parseInt(page.pageid)) {
+          res = page;
+        }
       }
-      return _results;
+      return res;
+    };
+
+    App.prototype.scrollToRectMark = function(markData) {
+      var page, targetTop,
+        _this = this;
+      console.log(markData);
+      page = this.getPageById(markData.pageid);
+      targetTop = page.dom.offsetTop;
+      console.log(page, markData.pageid, page.dom.offsetTop);
+      $(".rectMark").removeClass("focus");
+      $("#viewerContainer").animate({
+        scrollTop: targetTop
+      }, "normal", "swing", function() {
+        return $("#mark-" + markData.markid).addClass("focus");
+      });
+      return true;
     };
 
     return App;
@@ -161,15 +240,35 @@
   RectMark = (function(_super) {
     __extends(RectMark, _super);
 
-    function RectMark(type) {
+    function RectMark(type, pageSize, data) {
       if (type == null) {
         type = "normal";
       }
       RectMark.__super__.constructor.call(this, window.tpls['rect-mark']);
       if (type === "temp") {
         this.tempType();
+      } else {
+        console.log(data);
+        this.data = data;
+        this.id = data.markid;
+        this.dom.id = "mark-" + this.id;
+        this.J.css({
+          color: data.markcolor
+        });
+        this.updateSize(pageSize);
       }
     }
+
+    RectMark.prototype.updateSize = function(pageSize) {
+      var a;
+      a = 100;
+      return this.J.css({
+        left: this.data.markx * pageSize.width / a,
+        top: this.data.marky * pageSize.height / a,
+        width: this.data.markw * pageSize.width / a,
+        height: this.data.markh * pageSize.height / a
+      });
+    };
 
     RectMark.prototype.tempType = function() {
       var _this = this;
@@ -184,7 +283,7 @@
       };
     };
 
-    RectMark.prototype.getInfo = function() {
+    RectMark.prototype.getData = function() {
       var obj;
       obj = {
         left: this.dom.offsetLeft,
@@ -203,15 +302,15 @@
     __extends(Page, _super);
 
     function Page(app, pageContainerDom) {
-      var id,
-        _this = this;
+      var _this = this;
       Page.__super__.constructor.call(this, pageContainerDom);
-      id = this.dom.id.replace("pageContainer", "");
+      this.pageid = parseInt(this.dom.id.replace("pageContainer", ""));
       this.markingWrapper = new Suzaku.Widget("<div class='marking-wrapper'></div>");
       this.markingWrapper.appendTo(this.dom);
       this.textLayerJ = this.J.find('.textLayer');
-      this.marks = [];
       this.app = app;
+      this.marks = [];
+      this.initMarks();
       app.on("newComment", function() {
         return _this.newCommentActive();
       });
@@ -224,6 +323,30 @@
         }
       });
     }
+
+    Page.prototype.onresize = function() {
+      var m, pageSize, _i, _len, _ref, _results;
+      this.J = $("body #" + this.dom.id);
+      this.dom = this.J.get(0);
+      this.markingWrapper.appendTo(this.dom);
+      pageSize = this.getPageSize();
+      _ref = this.marks;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        m = _ref[_i];
+        _results.push(m.updateSize(pageSize));
+      }
+      return _results;
+    };
+
+    Page.prototype.getPageSize = function() {
+      var obj;
+      obj = {
+        width: parseFloat(this.J.css("width").replace("px", "")),
+        height: parseFloat(this.J.css("height").replace("px", ""))
+      };
+      return obj;
+    };
 
     Page.prototype.clearListeners = function() {
       this.dom.onmouseup = null;
@@ -294,10 +417,10 @@
     };
 
     Page.prototype.newCommentConfirm = function() {
-      var action, defaultInfo,
+      var action, defaultData,
         _this = this;
       action = "none";
-      defaultInfo = this.tempRectMark.getInfo();
+      defaultData = this.tempRectMark.getData();
       this.tempRectMark.on("drag", function(x, y) {
         _this.mouseStartPos = {
           x: x,
@@ -318,7 +441,7 @@
         }
         action = "none";
         _this.mouseStartPos = null;
-        return defaultInfo = _this.tempRectMark.getInfo();
+        return defaultData = _this.tempRectMark.getData();
       });
       return window.globalMouseListener.on("mousemove", "newCommentConfirm", function(evt) {
         var dx, dy, height, width;
@@ -330,12 +453,12 @@
         switch (action) {
           case "drag":
             return _this.tempRectMark.J.css({
-              left: defaultInfo.left + dx,
-              top: defaultInfo.top + dy
+              left: defaultData.left + dx,
+              top: defaultData.top + dy
             });
           case "resize":
-            width = defaultInfo.width + dx;
-            height = defaultInfo.height + dy;
+            width = defaultData.width + dx;
+            height = defaultData.height + dy;
             if (width < 5) {
               width = 5;
             }
@@ -352,6 +475,22 @@
       });
     };
 
+    Page.prototype.getTempMarkData = function() {
+      var a, data, obj, pageSize;
+      data = this.tempRectMark.getData();
+      pageSize = this.getPageSize();
+      a = 100;
+      obj = {
+        x: data.left / pageSize.width * a,
+        y: data.top / pageSize.height * a,
+        w: data.width / pageSize.width * a,
+        h: data.height / pageSize.height * a,
+        pageid: this.pageid,
+        color: 1
+      };
+      return obj;
+    };
+
     Page.prototype.newCommentCompleted = function() {
       if (!this.tempRectMark) {
         return false;
@@ -362,9 +501,35 @@
       return this.tempRectMark = null;
     };
 
-    Page.prototype.initUserMarks = function(marks) {
-      "show user marks";
+    Page.prototype.initMarks = function() {
+      var m, pageSize, _i, _j, _len, _len1, _ref, _ref1;
+      _ref = this.marks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        m = _ref[_i];
+        m.remove();
+      }
+      this.marks = [];
+      pageSize = this.getPageSize();
+      _ref1 = this.app.marks;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        m = _ref1[_j];
+        if (m.pageid === this.pageid) {
+          this.marks.push(this.addMark(pageSize, m));
+        }
+      }
       return true;
+    };
+
+    Page.prototype.addMark = function(pageSize, markData) {
+      var item,
+        _this = this;
+      item = new RectMark("normal", pageSize, markData);
+      item.markData = markData;
+      item.appendTo(this.markingWrapper);
+      item.dom.onclick = function() {
+        return _this.app.rightSection.scrollToMarkComments(item.markData, item);
+      };
+      return item;
     };
 
     return Page;

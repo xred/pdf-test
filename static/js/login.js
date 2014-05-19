@@ -11,7 +11,7 @@
       // console.log(1)
       // return loginAlert.fadeIn();
       req = jQuery.ajax({
-        url:'//localhost:8005/login',
+        url:'/login',
         type:'POST',
         data:{
           email:emailInput.val(),
@@ -21,7 +21,7 @@
         success:function(data,xhr){
           if(data['flag']==1){
             console.log(2)
-            window.location.href='//localhost:8005/home'
+            window.location = '/home'
           }
           else{
             return loginAlert.fadeIn()

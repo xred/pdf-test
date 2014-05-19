@@ -23,7 +23,7 @@
     registerBtn.click(function(){
     // console.log(1)
     req = jQuery.ajax({
-      url:'//localhost:8005/register',
+      url:'/register',
       type:'POST',
       data:{
         email:emailInput.val(),
@@ -34,7 +34,7 @@
       success:function(data,xhr){
         if(data['flag']==1){
           // console.log(1)
-          window.location.href='//localhost:8005/login';
+          window.location = '/login';
         }
         else{
           // console.log(2)

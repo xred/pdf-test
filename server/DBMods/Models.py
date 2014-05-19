@@ -31,6 +31,24 @@ session = DB_SESSION()
 
 BaseModel = declarative_base()
 
+def queryWrapper(func):
+    """
+    @deco
+    """
+    def wrapper(toDict = False,*args,**kwargs):
+        resList = []
+        res = func(*args,**kwargs)
+        if len(res) == 0:
+            return None
+        if not toDict:
+            return res;
+        else:
+            for i in res:
+                del i.__dict__['_sa_instance_state']
+                resList.append(i.__dict__)
+            return resList
+    return wrapper
+
 class User(BaseModel):
     """a map of user table"""
     __tablename__ = "markpaper_user"        
@@ -54,10 +72,13 @@ class Mark(BaseModel):
     """a map of mark table"""
     __tablename__ = "markpaper_mark"
     markid = Column(MEDIUMINT(8),primary_key=True)
+    articleid = Column(VARCHAR(30))
+    pageid = Column(Integer)
     markx = Column(Integer)
     marky = Column(Integer)
     markw = Column(Integer)
     markh = Column(Integer)
+    markcolor = Column(Integer)
     commentnum = Column(MEDIUMINT(8))
 
 class Comment(BaseModel):
@@ -68,8 +89,8 @@ class Comment(BaseModel):
     markid = Column(MEDIUMINT(8))
     content = Column(TEXT)
     userid = Column(MEDIUMINT(8))
-    username = Column(VARCHAR(255))
-    datetime = Column(Integer())
+    nickname = Column(VARCHAR(255))
+    datetime = Column(Integer)
     replynum = Column(MEDIUMINT(8))
     praisenum = Column(MEDIUMINT(8))
     
@@ -80,8 +101,8 @@ class Reply(BaseModel):
     commentid = Column(MEDIUMINT(8))
     content = Column(TEXT)
     userid = Column(MEDIUMINT(8))
-    username = Column(VARCHAR(255))
-    datetime = Column(Integer())
+    nickname = Column(VARCHAR(255))
+    datetime = Column(Integer)
     praisenum = Column(MEDIUMINT(8))
     
 def create_tables():

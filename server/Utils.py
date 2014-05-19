@@ -1,5 +1,7 @@
 # -*- coding:utf-8 -*-
-def parse_json():
+import tornado.escape
+
+def parse_json(string):
     try:
         data = tornado.escape.json_decode(string)
         return data
@@ -50,8 +52,10 @@ def authenticated(func):
     def wrapper(self,*args,**kwargs):
         "self is instance of BaseHandler"
         if not self.current_user:
-            self.abort(401)
-            self.redirect("/login")
+            if self.request.method == "POST":
+                self.abort(401)
+            else:
+                self.redirect("/login")
             return None
         return func(self,*args,**kwargs)
     return wrapper

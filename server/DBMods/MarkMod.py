@@ -1,12 +1,15 @@
 # -*- coding:utf-8 -*-
-from Models import Mark,session
+from Models import Mark,session,queryWrapper
 
-def add(x,y,width,height):
+def add(aid,pageid,x,y,width,height,color):
     mark = Mark(
+        articleid = aid,
+        pageid = pageid,
         markx = x,
         marky = y,
         markw = width,
-        markh = height
+        markh = height,
+        markcolor = color,
     )
     session.add(mark)
     session.commit()
@@ -15,10 +18,11 @@ def add(x,y,width,height):
 def delete():
     pass
 
+@queryWrapper
 def query(**selector):
-    res = session.query(Mark).filter_by(**selector).all()
-    if len(res) == 0:
-        return None
-    else:
-        return res
+    return session.query(Mark).filter_by(**selector).all()
+
+
+
+            
         

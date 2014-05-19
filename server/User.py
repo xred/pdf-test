@@ -2,17 +2,10 @@
 from Base import BaseHandler
 import Utils
 from DBMods import UserMod
-import MySQLdb
-conn = MySQLdb.connect(host='localhost',user='root',passwd='',db='markpaper')
-cursor = conn.cursor()
 
 class Login(BaseHandler):
     def get(self):
-        if self.get_secure_cookie('user') is None:
-            self.render('login.html',page='login')
-            # UserMod.update('fuck@fuck.fuck',password='fuck')
-        else:
-            self.redirect('/home')
+        self.render('login.html',page='login')
     def post(self):
         email = self.get_argument('email')
         # print email
@@ -36,22 +29,17 @@ class Register(BaseHandler):
         email = self.get_argument('email')
         psw = self.get_argument('psw')
         nickname = self.get_argument('nickname')
-        print nickname
-        check = UserMod.query(email=email)
-        print check
-        if check is None:
-            # print '1'
-            res = dict(flag=1)
+        if not UserMod.query(email=email) and not not UserMod.query(nickname=nickname):
             UserMod.add(email,psw,nickname)
+            res = dict(flag=1)
         else:
-            # print '2'
             res = dict(flag=0)
         self.write(res)
 
 class Home(BaseHandler):
     @Utils.authenticated
     def get(self):
-        self.render('home.html')
+        self.render('home.html',nickname=self.user_record.nickname)
 
 class Logout(BaseHandler):
     @Utils.authenticated
