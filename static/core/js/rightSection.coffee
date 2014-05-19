@@ -1,14 +1,14 @@
 class RightSectionPage extends Suzaku.Widget
   animateRate = "normal"
   init:-> return true
-  enterFromRight:->
+  enterFromRight:(callback)->
     @emit "enter"
     @J.css {left:"110%",display:"block"}
-    @J.animate {left:"0"},animateRate
-  enterFromLeft:->
+    @J.animate {left:"0"},animateRate,callback
+  enterFromLeft:(callback)->
     @emit "enter"
     @J.css {left:"-110%",display:"block"}
-    @J.animate {left:"0"},animateRate
+    @J.animate {left:"0"},animateRate,callback
   leaveToLeft:->
     @emit "leave"
     @J.css {left:"0"}
@@ -21,21 +21,63 @@ class RightSectionPage extends Suzaku.Widget
       @J.hide()
 
 class EditPage extends RightSectionPage
+  constructor:->
+    super
+    @J.find(".color-btn").on "click",->
+      $(this).addClass("active").siblings().removeClass("active")
+    @UI.color1.onclick = => @emit "useColor",1
+    @UI.color2.onclick = => @emit "useColor",2
+    @UI.color3.onclick = => @emit "useColor",3
+    @UI.color4.onclick = => @emit "useColor",4
   init:(type,inputData)->
+    @J.find('.header-section').hide()
     switch type
       when "newComment" then @UI['new-comment-options'].J.show()
-      else @UI['new-comment-options'].J.hide()
+      when "addComment" then @UI['add-comment-options'].J.show()
     CKEDITOR.instances.editPageEditor.setData(inputData)
     
 class SingleCommentPage extends RightSectionPage
-  constructor:(target)->
+  constructor:(target,@rightSection)->
     target.J.html window.tpls['single-comment-item']
     super target
-  init:(commentData)->
+    @api = @rightSection.app.api
+    @UI.back.onclick = (evt)=>
+      evt.stopPropagation()
+      @rightSection.goBack()
+  init:(commentData,commentsItem)->
+    @commentData = commentData
+    @commentsItem = commentsItem
+    @UI.nickname.J.text commentData.nickname
+    @UI["vote-up-num"].J.text commentData.praisenum
+    @UI['vote-up'].onclick = => @voteUpComment()
+    @UI['vote-down'].onclick = => @voteDownComment()
+    @UI['vote-down'].onclick = => @voteDownComment()
+    @UI['reply'].onclick = => @addReply()
+    @UI.content.J.html commentData.content
     for d in [1..5]
       item = new Suzaku.Widget @UI['single-reply-li-tpl'].J.html()
       item.appendTo @UI['reply-list']
     return null
+  voteUpComment:->
+    call = @api.voteupComment @commentData.commentid,(res)=>
+      if not res.success
+        return console.error res.error_msg
+      @commentData.praisenum = res.praisenum
+      @UI['vote-up-num'].J.text res.praisenum
+      @commentsItem.updateVoteupNum @commentData.commentid,res.praisenum
+    call.fail =>
+      console.error arguments
+  voteDownComment:->
+    call = @api.votedownComment @commentData.commentid,(res)=>
+      if not res.success
+        return console.error res.error_msg
+      @commentData.praisenum = res.praisenum
+      @UI['vote-up-num'].J.text res.praisenum
+      @commentsItem.updateVoteupNum @commentData.commentid,res.praisenum
+    call.fail =>
+      console.error arguments
+  addReply:->
+    console.log "add reply"
             
 class window.RightSection extends Suzaku.Widget
   constructor:(app)->
@@ -49,7 +91,7 @@ class window.RightSection extends Suzaku.Widget
     @commentPage = new RightSectionPage @UI['comment-page']
     self = this
     @editPage = new EditPage @UI['edit-page']
-    @singleCommentPage = new SingleCommentPage @UI['single-comment-page']
+    @singleCommentPage = new SingleCommentPage @UI['single-comment-page'],this
     @rightSectionPages = [@commentPage,@editPage,@singleCommentPage]
     @initComments()
     @goInto @commentPage
@@ -62,10 +104,12 @@ class window.RightSection extends Suzaku.Widget
       @commentsItems.push item
       @UI['comments-wrapper'].J.css "padding-bottom",window.screen.height
     return this
-  scrollToMarkComments:(markData,markWidget)->
-    paddingTop = 30
+  scrollToMarkComments:(markid)->
+    if @currentPage isnt @commentPage
+      @goBack()
+    paddingTop = 50
     for ci in @commentsItems
-      if ci.markData.markid is markData.markid
+      if ci.markData.markid is markid
         ci.J.siblings().removeClass "focus"
         targetTop = ci.dom.offsetTop - paddingTop
         @commentPage.J.animate scrollTop:targetTop,"normal","swing",=>
@@ -75,19 +119,21 @@ class window.RightSection extends Suzaku.Widget
     @pageStack = []
     last = null
     return this
-  goInto:(page)->
+  goInto:(page,callback)->
     last = @pageStack[@pageStack.length - 1]
     if last then last.leaveToLeft()
     @pageStack.push page
-    page.enterFromRight()
+    page.enterFromRight(callback)
+    @currentPage = page
     return this
-  goBack:->
+  goBack:(callback)->
     current = @pageStack.pop()
     if not current
       console.error "no page to go back"
       return false
     current.leaveToRight()
-    @pageStack[@pageStack.length - 1].enterFromLeft()
+    @currentPage = @pageStack[@pageStack.length - 1]
+    @currentPage.enterFromLeft(callback)
     return this
   showNewCommentHint:->
     hintJ = @UI['new-comment-hint'].J
@@ -100,25 +146,33 @@ class window.RightSection extends Suzaku.Widget
   hideNewCommentHint:->
     hintJ = @UI['new-comment-hint'].J
     contentJ = hintJ.find(".content")
-    contentJ.slideUp "fast",=>
-      hintJ.hide()
+    contentJ.slideUp "fast"
+    hintJ.fadeOut "normal"
   showEditPage:(type,inputData,success,fail)->
     @editPage.init type,inputData
     @UI['edit-accept-btn'].onclick = =>
       content = CKEDITOR.instances.editPageEditor.getData()
-      success content
+      if not content.replace(" ","")
+        return alert "content is required!"
+      success content if success
       @goBack()
     @UI['edit-cancel-btn'].onclick = =>
-      fail()
+      fail() if fail
       @goBack()
     @goInto @editPage
-  showSingleComment:(commentData)->
-    @singleCommentPage.init commentData
-    @singleCommentPage.UI['back'].onclick = =>
-      @goBack()
+    return @editPage
+  showSingleComment:(commentData,commentsItem,markData)->
+    @singleCommentPage.init commentData,commentsItem
+    @singleCommentPage.UI.header.onclick = (evt)=>
+      @app.scrollToRectMark markData
     @goInto @singleCommentPage
-  commentsItemOnclick:(commentsItem)->
+  commentsItemActive:(commentsItem)->
     @app.scrollToRectMark commentsItem.markData
+    commentsItem.J.addClass("focus").siblings().removeClass("focus")
+  addComment:(commentsItem)->
+    success = (content)=>
+      @app.addCommentToMark content,commentsItem.markData
+    @showEditPage "addComment",null,success
         
 class CommentsItem extends Suzaku.Widget
   constructor:(rightSection,comments,markData)->
@@ -126,19 +180,30 @@ class CommentsItem extends Suzaku.Widget
     @rightSection = rightSection
     @comments = comments
     @markData = markData
+    @markid = markData.markid
     @toggleItems = []
     @unfoldBtn = null
     @folded = true
-    @dom.onclick = =>
-      @rightSection.commentsItemOnclick this
+    @initBtns()
     if @comments.length > 3
       first = @addItem @comments[0]
       @insertUnfoldBtn first
       @addItem @comments[@comments.length - 1]
-      @UI['fold'].onclick = => @fold()
+      @UI['fold'].onclick = (evt)=>
+        evt.stopPropagation()
+        @fold()
     else
       for c in @comments
         @addItem c
+  updateVoteupNum:(commentid,praisenum)->
+    @J.find(".id-#{commentid} .vote-up-num").text praisenum
+  updateReplyNum:(commentid,replynum)->
+    @J.find(".id-#{commentid} .reply-num").text replynum
+  initBtns:->
+    @dom.onclick = =>
+      @rightSection.commentsItemActive this
+    @UI['add-comment'].onclick = (evt)=>
+      @rightSection.addComment this
   fold:->
     return false if @folded
     @UI['fold'].J.fadeOut "fast"
@@ -159,11 +224,12 @@ class CommentsItem extends Suzaku.Widget
   addItem:(data,animate = false)->
     item = new Suzaku.Widget @UI['single-comment-li-tpl'].J.html()
     item.data = data
+    item.J.addClass "id-#{data.commentid}"
     item.UI.content.J.html data.content
     item.UI.nickname.J.text data.nickname
     item.UI['reply-num'].J.text data.replynum
     item.UI['vote-up-num'].J.text data.praisenum
-    item.dom.onclick = => @rightSection.showSingleComment item.data
+    item.dom.onclick = => @rightSection.showSingleComment item.data,this,@markData
     item.appendTo @UI.list
     return item
   insertUnfoldBtn:(target)->

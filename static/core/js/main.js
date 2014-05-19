@@ -75,6 +75,8 @@
       am.setMethod("post");
       am.declare("addComment", "/comment", ["action=add", "aid=" + this.aid, "content", "markdata"]);
       am.declare("addCommentToMark", "/comment", ["action=add", "aid=" + this.aid, "content", "markid"]);
+      am.declare("voteupComment", "/comment", ["action=voteup", "commentid"]);
+      am.declare("votedownComment", "/comment", ["action=votedown", "commentid"]);
       this.api = am.generate();
       tm = new Suzaku.TemplateManager;
       tm.setPath("/core/templates/");
@@ -101,7 +103,11 @@
             return false;
           }
           $("#newComment").addClass("toggled");
+          $(".marking-wrapper").removeClass("hide");
           return _this.newComment();
+        });
+        $("#hideMarks").on("click", function() {
+          return $(".marking-wrapper").toggleClass("hide");
         });
         return window.onresize = function() {
           var _j, _len1, _ref1, _results;
@@ -148,27 +154,35 @@
 
     App.prototype.newComment = function() {
       newCommentLock = true;
+      $(".rectMark").removeClass("focus").addClass("unselectable");
       this.emit("newComment");
       return this.rightSection.showNewCommentHint();
     };
 
     App.prototype.newCommentConfirm = function(page) {
-      var fail, success,
+      var editPage, fail, success,
         _this = this;
       this.emit("newComment:confirm");
       page.newCommentConfirm();
+      editPage = null;
       success = function(content) {
         console.log(content);
+        editPage.off("useColor");
         if (content.replace(" ", "").length === "0") {
           alert("Error: Content is Empty");
         }
         return _this.newCommentSuccessed(page, content);
       };
       fail = function() {
+        editPage.off("useColor");
         return _this.newCommentCanceled(page);
       };
       this.rightSection.hideNewCommentHint();
-      return this.rightSection.showEditPage("newComment", null, success, fail);
+      editPage = this.rightSection.showEditPage("newComment", null, success, fail);
+      return editPage.on("useColor", function(color) {
+        page.tempRectMark.J.removeClass("color1 color2 color3 color4").addClass("color" + color);
+        return page.tempRectMark.color = color;
+      });
     };
 
     App.prototype.newCommentSuccessed = function(page, content) {
@@ -179,6 +193,7 @@
       $("#newComment").removeClass("toggled");
       console.log("new comment page:", page, "content:", content);
       page.newCommentCompleted();
+      $(".rectMark").removeClass("unselectable");
       return call = this.api.addComment(content, markData, function(res) {
         if (!res.success) {
           console.error(res.error_msg);
@@ -202,7 +217,25 @@
           p.newCommentCompleted();
         }
       }
-      return $("#newComment").removeClass("toggled");
+      $("#newComment").removeClass("toggled");
+      return $(".rectMark").removeClass("unselectable");
+    };
+
+    App.prototype.addCommentToMark = function(content, markData) {
+      var call, markid,
+        _this = this;
+      markid = markData.markid;
+      return call = this.api.addCommentToMark(content, markid, function(res) {
+        if (!res.success) {
+          console.error(res.error_msg);
+        }
+        return _this.initComments(function() {
+          return _this.rightSection.initComments().resetStack().goInto(_this.rightSection.commentPage, function() {
+            _this.rightSection.scrollToMarkComments(markid);
+            return _this.scrollToRectMark(markData);
+          });
+        });
+      });
     };
 
     App.prototype.getPageById = function(pageid) {
@@ -218,17 +251,19 @@
     };
 
     App.prototype.scrollToRectMark = function(markData) {
-      var page, targetTop,
+      var markJ, page, targetTop,
         _this = this;
-      console.log(markData);
+      $(".marking-wrapper").removeClass("hide");
       page = this.getPageById(markData.pageid);
-      targetTop = page.dom.offsetTop;
-      console.log(page, markData.pageid, page.dom.offsetTop);
-      $(".rectMark").removeClass("focus");
+      markJ = $("#mark-" + markData.markid);
+      targetTop = page.dom.offsetTop + parseInt(markJ.css("top").replace("xp", "")) - 30;
+      if (!markJ.hasClass("focus")) {
+        $(".rectMark").removeClass("focus");
+      }
       $("#viewerContainer").animate({
         scrollTop: targetTop
       }, "normal", "swing", function() {
-        return $("#mark-" + markData.markid).addClass("focus");
+        return markJ.addClass("focus");
       });
       return true;
     };
@@ -248,10 +283,10 @@
       if (type === "temp") {
         this.tempType();
       } else {
-        console.log(data);
         this.data = data;
         this.id = data.markid;
         this.dom.id = "mark-" + this.id;
+        this.J.addClass("color" + data.markcolor);
         this.J.css({
           color: data.markcolor
         });
@@ -272,7 +307,8 @@
 
     RectMark.prototype.tempType = function() {
       var _this = this;
-      this.J.addClass("temp");
+      this.J.addClass("temp focus color1");
+      this.color = 1;
       this.dom.onmousedown = function(evt) {
         return _this.emit("drag", evt.clientX, evt.clientY);
       };
@@ -289,7 +325,8 @@
         left: this.dom.offsetLeft,
         top: this.dom.offsetTop,
         width: this.dom.offsetWidth,
-        height: this.dom.offsetHeight
+        height: this.dom.offsetHeight,
+        color: this.color
       };
       return obj;
     };
@@ -486,7 +523,7 @@
         w: data.width / pageSize.width * a,
         h: data.height / pageSize.height * a,
         pageid: this.pageid,
-        color: 1
+        color: data.color
       };
       return obj;
     };
@@ -527,7 +564,9 @@
       item.markData = markData;
       item.appendTo(this.markingWrapper);
       item.dom.onclick = function() {
-        return _this.app.rightSection.scrollToMarkComments(item.markData, item);
+        $(".rectMark").removeClass("focus");
+        item.J.addClass("focus");
+        return _this.app.rightSection.scrollToMarkComments(markData.markid);
       };
       return item;
     };

@@ -39,6 +39,8 @@ class App extends Suzaku.EventEmitter
     am.setMethod "post"
     am.declare "addComment","/comment",["action=add","aid=#{@aid}","content","markdata"]
     am.declare "addCommentToMark","/comment",["action=add","aid=#{@aid}","content","markid"]
+    am.declare "voteupComment","/comment",["action=voteup","commentid"]
+    am.declare "votedownComment","/comment",["action=votedown","commentid"]
     @api = am.generate()
     tm = new Suzaku.TemplateManager
     tm.setPath "/core/templates/"
@@ -55,7 +57,10 @@ class App extends Suzaku.EventEmitter
       $("#newComment").on "click",=>
         return false if newCommentLock
         $("#newComment").addClass "toggled"
+        $(".marking-wrapper").removeClass "hide"
         @newComment()
+      $("#hideMarks").on "click",=>
+        $(".marking-wrapper").toggleClass "hide"
       window.onresize = =>
         for p in @pages
           p.onresize()
@@ -74,26 +79,34 @@ class App extends Suzaku.EventEmitter
       console.error "cannot get comments",arguments
   newComment:()->
     newCommentLock = true
+    $(".rectMark").removeClass("focus").addClass("unselectable")
     @emit "newComment"
     @rightSection.showNewCommentHint()
   newCommentConfirm:(page)->
     @emit "newComment:confirm"
     page.newCommentConfirm()
+    editPage = null
     success = (content)=>
       console.log content
+      editPage.off "useColor"
       if content.replace(" ","").length is "0"
         alert "Error: Content is Empty"
       @newCommentSuccessed page,content
     fail = =>
+      editPage.off "useColor"
       @newCommentCanceled page
     @rightSection.hideNewCommentHint()
-    @rightSection.showEditPage "newComment",null,success,fail
+    editPage = @rightSection.showEditPage "newComment",null,success,fail
+    editPage.on "useColor",(color)=>
+      page.tempRectMark.J.removeClass("color1 color2 color3 color4").addClass("color#{color}")
+      page.tempRectMark.color = color
   newCommentSuccessed:(page,content)->
     newCommentLock = false
     markData = page.getTempMarkData()
     $("#newComment").removeClass "toggled"
     console.log "new comment page:",page,"content:",content
     page.newCommentCompleted()
+    $(".rectMark").removeClass("unselectable")
     call = @api.addComment content,markData,(res)=>
       if not res.success
         console.error res.error_msg
@@ -106,17 +119,28 @@ class App extends Suzaku.EventEmitter
     else for p in @pages
       p.newCommentCompleted()
     $("#newComment").removeClass "toggled"
+    $(".rectMark").removeClass("unselectable")
+  addCommentToMark:(content,markData)->
+    markid = markData.markid
+    call = @api.addCommentToMark content,markid,(res)=>
+      if not res.success
+        console.error res.error_msg
+      @initComments =>
+        @rightSection.initComments().resetStack().goInto @rightSection.commentPage,=>
+          @rightSection.scrollToMarkComments markid
+          @scrollToRectMark markData
   getPageById:(pageid)->
     res = page for page in @pages when parseInt(pageid) is parseInt(page.pageid)
     return res
   scrollToRectMark:(markData)->
-    console.log markData
+    $(".marking-wrapper").removeClass "hide"
     page = @getPageById markData.pageid
-    targetTop = page.dom.offsetTop
-    console.log page,markData.pageid,page.dom.offsetTop
-    $(".rectMark").removeClass "focus"
+    markJ = $("#mark-#{markData.markid}")
+    targetTop = page.dom.offsetTop + parseInt(markJ.css("top").replace("xp","")) - 30
+    if not markJ.hasClass("focus")
+      $(".rectMark").removeClass "focus"
     $("#viewerContainer").animate scrollTop:targetTop,"normal","swing",=>
-      $("#mark-#{markData.markid}").addClass "focus"
+      markJ.addClass "focus"
     return true
 
 class RectMark extends Suzaku.Widget
@@ -125,10 +149,10 @@ class RectMark extends Suzaku.Widget
     if type is "temp"
       @tempType()
     else
-      console.log data
       @data = data
       @id = data.markid
       @dom.id = "mark-#{@id}"
+      @J.addClass "color#{data.markcolor}"
       @J.css color:data.markcolor
       @updateSize pageSize
   updateSize:(pageSize)->
@@ -139,7 +163,8 @@ class RectMark extends Suzaku.Widget
       width:@data.markw * pageSize.width / a
       height:@data.markh * pageSize.height / a
   tempType:->
-    @J.addClass "temp"
+    @J.addClass "temp focus color1"
+    @color = 1
     @dom.onmousedown = (evt)=>
       @emit "drag",evt.clientX,evt.clientY
     @UI['resizer'].onmousedown = (evt)=>
@@ -152,6 +177,7 @@ class RectMark extends Suzaku.Widget
       top:@dom.offsetTop
       width:@dom.offsetWidth
       height:@dom.offsetHeight
+      color:@color
     return obj
   
 class Page extends Suzaku.Widget
@@ -255,7 +281,7 @@ class Page extends Suzaku.Widget
       w:data.width/pageSize.width*a
       h:data.height/pageSize.height*a
       pageid:@pageid
-      color:1
+      color:data.color
     return obj
   newCommentCompleted:->
     return false if not @tempRectMark
@@ -275,7 +301,9 @@ class Page extends Suzaku.Widget
     item.markData = markData
     item.appendTo @markingWrapper
     item.dom.onclick = =>
-      @app.rightSection.scrollToMarkComments item.markData,item
+      $(".rectMark").removeClass("focus")
+      item.J.addClass("focus")
+      @app.rightSection.scrollToMarkComments markData.markid
     return item
       
 RunPDFViewer pdfUrl,=>

@@ -59,24 +59,30 @@
 							<div class="comments-wrapper" data-id="comments-wrapper" ></div>
 						</div>
 						<div id="edit-page" class="right-section-page" data-id="edit-page" style="display:none;">
-							<div class="new-comment-options" data-id="new-comment-options" >
-								<h2>Complete Your Comment</h2>
-								<p class="hint" >Enter comment conente to complete</p>
-								<div class="color-picker" >
-									<button class="blue" ></button>
-									<button class="red" ></button>
-									<button class="green" ></button>
-									<button class="yellow" ></button>
+							<div class="inner" >
+								<div class="header-section" data-id="new-comment-options" >
+									<h2>Complete Your Comment</h2>
+									<p class="hint" >Enter comment conente to complete</p>
+									<div class="color-picker" data-id="color-picker" >
+										<button class="blue color-btn active" data-id="color1"></button>
+										<button class="red color-btn" data-id="color2"></button>
+										<button class="green color-btn" data-id="color3"></button>
+										<button class="yellow color-btn" data-id="color4"></button>
+									</div>
 								</div>
+								<div class="header-section" data-id="add-comment-options" >
+									<h2>Add Comment to this mark</h2>
+									<p class="hint" >Enter comment conente to complete</p>
+								</div>
+								<div id="ckediter-wrapper" data-id="ckediter-wrapper" >
+									<textarea name="editPageEditor"></textarea>
+								</div>
+								<br />
+								<footer>
+									<button class="cancel" data-id="edit-cancel-btn" >cancel</button>
+									<button class="accept" data-id="edit-accept-btn" >accept</button>
+								</footer>
 							</div>
-							<div id="ckediter-wrapper" data-id="ckediter-wrapper" >
-								<textarea name="editPageEditor"></textarea>
-							</div>
-							<br />
-							<footer>
-								<button class="cancel" data-id="edit-cancel-btn" >cancel</button>
-								<button class="accept" data-id="edit-accept-btn" >accept</button>
-							</footer>
 						</div>
 						<div id="single-comment-page" class="right-section-page" data-id="single-comment-page" style="display:none;" > </div>						
 					</div>

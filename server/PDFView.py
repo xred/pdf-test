@@ -81,10 +81,29 @@ class Comment(BaseHandler):
         return new_mark
     def update_content(self):
         pass
+        
+    @Utils.check_arguments("commentid:int")
     def voteup(self):
-        pass
+        cid = self.args['commentid']
+        res = CommentMod.query(commentid = cid)
+        if not res:
+            self.write(dict(success=False , error_msg = "invailid comment id"))
+            return
+        oldNum = res[0].praisenum
+        CommentMod.update(self.args['commentid'],praisenum = oldNum+1)
+        self.write(dict(success=True,praisenum = oldNum+1))
+        
+    @Utils.check_arguments("commentid:int")
     def votedown(self):
-        pass
+        cid = self.args['commentid']
+        res = CommentMod.query(commentid = cid)
+        if not res:
+            self.write(dict(success=False , error_msg = "invailid comment id"))
+            return
+        oldNum = res[0].praisenum
+        CommentMod.update(self.args['commentid'],praisenum = oldNum-1)
+        self.write(dict(success=True,praisenum = oldNum-1))
+
     
 class Reply(BaseHandler):
     @Utils.authenticated

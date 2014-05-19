@@ -12,7 +12,6 @@ def add(uid,nickname,aid,mid,content):
         replynum = 0,
         praisenum = 0,
         datetime = int(time.time()),
-        commentnum = 1
     )
     session.add(comment)
     session.commit()
@@ -25,5 +24,6 @@ def query(**selector):
 def delete(**selector):
     pass
 
-def update(**selector):
-    pass
+def update(commentid,**update):
+    session.query(Comment).filter_by(commentid=commentid).update(update,synchronize_session=False)
+    #session.commit()

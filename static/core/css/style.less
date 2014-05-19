@@ -4,6 +4,14 @@
 @color-blue-hover:#3a7eb8;
 @radius:5px;
 @right-section-width:380px;
+@color1:rgba(66, 139, 202, 0.4);
+@color1-border:#357ebd;
+@color2:rgba(210, 50, 45, 0.35);
+@color2-border:#ac2925;
+@color3:rgba(71, 164, 71, 0.35);
+@color3-border:#398439;
+@color4:rgba(237, 156, 40, 0.35);
+@color4-border:#d58512;
 #openFile,#pageRotateCw,#pageRotateCcw,.horizontalToolbarSeparator{display:none}
 .toolbar .outerCenter{right:265px !important;}
 .avatar{overflow:hidden;}
@@ -70,7 +78,7 @@ body{
 		box-shadow: inset 1px 0 0 rgba(0,0,0,.25);
 		z-index:10;
 		box-sizing:border-box;
-		padding: 22px 1px 0 10px;
+		padding: 22px 1px 0 1px;
 		font-size:14px;
 		overflow: hidden;
 		.inner{
@@ -84,6 +92,7 @@ body{
 				padding-top: 10px;
 				position: absolute;
 				top: 0;
+				padding-left:10px;
 				width: 100%;
 		}
 		.new-comment-hint{
@@ -121,20 +130,17 @@ body{
 				box-sizing:content-box;
 		}
 		.comments-item{
-				width: 98%;
-				margin-left: 1%;
+				width: 100%;
 				background-color:#fff;
 				min-height:50px;
 				margin-top:10px;
 				border-radius:@radius;
 				box-sizing:border-box;
 				&.focus{
-						box-shadow:0 0 7px rgba(30, 239, 234, 0.58);
 						header{
-								background-color: #48C8C2;
-								box-shadow: inset 0 0 4px rgba(222, 241, 243, 0.7);
+								background-color:#5BC0F4 !important;
+								box-shadow: 0px 1px 1px #317598;
 						}
-						header:hover{background-color: #48C8C2;}
 				}
 				button{
 						background-color:transparent;
@@ -157,6 +163,9 @@ body{
 				}
 				header{
 						.transition(.2s);
+						box-shadow:0 1px 0 #808080,inset 0 1px 1px rgba(255, 255, 255, 0.13);
+						position:relative;
+						z-index:2;
 						border-radius:(@radius - 2) (@radius - 2) 0 0;
 						box-sizing:border-box;
 						height:37px;
@@ -196,8 +205,12 @@ body{
 						height:88px;
 						box-sizing:border-box;
 						position:relative;
+						border-top: 1px solid #ddd;
 						&:last-child{
 								border-radius:0 0 (@radius) (@radius);
+						}
+						&:first-child{
+								border:none;
 						}
 						&:hover{
 								background-color:#eee;
@@ -236,10 +249,16 @@ body{
 				}
 		}
 }
-#edit-page{
-		background-color:#fff;
-		border-radius:0 0 @radius @radius;
-		.new-comment-options{
+#right-section #edit-page{
+		overflow:hidden;
+		width:100%;
+		.inner{
+				margin-top:10px;
+				margin-right:10px;
+				background-color:#fff;
+				border-radius:@radius;
+		}
+		.header-section{
 				padding: 15px;
 				padding-bottom: 10px;
 				margin-bottom:10px;
@@ -259,10 +278,10 @@ body{
 								&.active{opacity:1 !important;}
 								&:hover{opacity:0.5;}
 						}
-						.blue{background-color:#428bca; border-color:#357ebd;}
-						.red{background-color:#d2322d; border-color:#ac2925;}
-						.green{background-color:#47a447; border-color:#398439;}
-						.yellow{background-color:#ed9c28; border-color:#d58512;}
+						.blue{background-color:@color1; border-color:@color1-border;}
+						.red{background-color:@color2; border-color:@color2-border;}
+						.green{background-color:@color3; border-color:@color3-border;}
+						.yellow{background-color:@color4; border-color:@color4-border;}
 				}
 		}
 		#ckediter-wrapper{
@@ -292,9 +311,10 @@ body{
 				padding-bottom: 35px;
 				box-sizing: border-box;
 				.inner{
-						overflow-y: auto;
+						overflow-y: scroll;
 						box-sizing:border-box;
 						padding:10px;
+						padding-right:2px;
 				}
 				.back{
 						background-color:transparent;
@@ -311,6 +331,7 @@ body{
 						&:hover{box-shadow: inset 0 0 5px rgba(0,0,0,0.3);}
 				}
 				.single-comment-item-header{
+						box-shadow:0 1px 0 #808080,inset 0 1px 1px rgba(255, 255, 255, 0.13);
 						border-radius:(@radius - 2) (@radius - 2) 0 0;
 						box-sizing:border-box;
 						height:37px;
@@ -322,7 +343,7 @@ body{
 						}
 				}
 		}
-		.date{color: #999;}
+		.date{color: #999;font-size:12px;}
 		footer{
 				button{
 						background-color:transparent;
@@ -341,6 +362,9 @@ body{
 								font-size:12px;
 						}
 				}
+				.reply-btn{
+						float:right;
+				}
 		}
 		.comment{
 				.header-part{
@@ -348,6 +372,8 @@ body{
 						top: 12px;
 						left:0;
 						padding:0 58px;
+						width:100%;
+						box-sizing:border-box;
 						.nickname{
 								color:#3e3e3e;
 								margin-bottom:6px;
@@ -399,14 +425,14 @@ body{
 				position:relative;
 				z-index:1;
 				box-sizing:border-box;
-				margin-top: 12px;
-				&:before{
+				margin-top: 6px;
+				&::before{
 						width: 5px;
 						height: 5px;
 						content: url("/core/img/reply-up-arrow.png");
 						position: absolute;
 						top: -12px;
-						left: 79px;
+						left: 77px;
 				}
 		}
 		.single-reply-li{
@@ -428,6 +454,7 @@ body{
 						.content{margin:5px 0;}
 				}
 				.vote-up-btn{float:right;}
+				.reply-btn{float:right;}
 		}
 }
 .marking-wrapper{
@@ -435,31 +462,62 @@ body{
 		top:0;
 		left:0;
 		z-index:2;
+		&.hide{
+				visibility:hidden;
+		}
 		.rectMark{
 				cursor:pointer;
 				display:block;
 				position:absolute;
 				border-radius:3px;
-				background-color:rgba(66,139,202,0.3);
 				box-sizing:border-box;
-				border:2px solid rgba(66,139,202,0.8);
+				border:solid;
+				border-width:1px;
 				.resizer{display:none;}
-				overflow:hidden;
-				opacity:0.7;
-				&:hover{opacity:1;}
+				overflow:visible;
+				opacity:0.5;
+				&:hover{opacity:0.8;}
+				&.unselectable{
+						pointer-events: none;						
+				}
+				&.focus{
+						box-shadow: 0px 3px 7px rgba(0,0,0,0.3);
+						border-width:2px;
+						opacity:1;
+				}
 				&.temp{
 						cursor:move;
 						.resizer{
-								@size:15px;
-								background-color:blue;
-								display:block;
-								position:absolute;
-								cursor:nwse-resize;
-								right:0;
-								bottom:0;
-								width:@size;
-								height:@size;
+								background-color: #FFFFFF;
+								display: block;
+								border: 3px solid @color1-border;
+								position: absolute;
+								cursor: nwse-resize;
+								right: -4px;
+								bottom: -5px;
+								width: 5px;
+								height: 5px;
 						}
+				}
+				&.color1{
+						background-color:@color1;
+						border-color:@color1-border;
+						.resizer{border-color:@color1-border;}
+				}
+				&.color2{
+						background-color:@color2;
+						border-color:@color2-border;
+						.resizer{border-color:@color2-border;}
+				}
+				&.color3{
+						background-color:@color3;
+						border-color:@color3-border;
+						.resizer{border-color:@color3-border;}
+				}
+				&.color4{
+						background-color:@color4;
+						border-color:@color4-border;
+						.resizer{border-color:@color4-border;}
 				}
 		}
 }

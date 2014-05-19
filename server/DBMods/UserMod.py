@@ -15,14 +15,11 @@ def delete(**selector):
         session.delete(instance)
     session.commit()
 
-def update_by_email(email,**update):
-    for instance in session.query(User).filter_by(email=email):
+def update(email,**update):
+    for instance in session.query(User).filter_by(**selector):
         if 'password' in update:
             instance.password = update["password"]
     session.commit()
-
-def update(*args,**kwargs):
-    update_by_email(*args,**kwargs)
 
 if not query(nickname = "test"):
     add("test@test.com","123456","test")

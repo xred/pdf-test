@@ -10,6 +10,7 @@ def add(aid,pageid,x,y,width,height,color):
         markw = width,
         markh = height,
         markcolor = color,
+        commentnum = 1,
     )
     session.add(mark)
     session.commit()
