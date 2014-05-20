@@ -35,7 +35,6 @@ class Register(BaseHandler):
         self.render('register.html',page='register')
     def post(self):
         email = self.get_argument('email')
-        print email
         psw = self.get_argument('psw')
         nickname = self.get_argument('nickname')
         if not UserMod.query(email=email) and not not UserMod.query(nickname=nickname):
@@ -46,16 +45,16 @@ class Register(BaseHandler):
         self.write(res)
 
 class Home(BaseHandler):
+    papers=[]
     @Utils.authenticated
     def get(self):
         t = time.strftime("%Y.%m.%d",time.localtime())
         content = 'fuuuuuuuuuuuuuuuuuuuuck'
         comment= dict(comment_name='nmsl',comment_date=t,content = content)
-        # self.write(res)
         papers = [{
         "paperid":1,"marks":[
-            {"markid":1,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment]},
-            {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment]},
+            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment]},
+            {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment,comment]},
         ]}
         ]
         data = dict(papers = papers)
@@ -63,10 +62,29 @@ class Home(BaseHandler):
         # print test
         self.render('home.html',nickname=self.user_record.nickname,data = data)
     def post(self):
-        markid = self.get_argument('markid')
-        print markid
-        res =dict(comment=[{"comment_name":'van',"comment_date":'2099.3.42',"content":'deep dark fantsy'},
-                    {"comment_name":'bili',"comment_date":'2099.3.42',"content":'a?'}])
+        cmmMarkid = self.get_argument('markid')
+        cmmPaperid = self.get_argument('paperid')
+        myOrOther = self.get_argument('myOrOther')
+       
+        t = time.strftime("%Y.%m.%d",time.localtime())
+        content = 'fuuuuuuuuuuuuuuuuuuuuck'
+        comment= dict(comment_name='nmsl',comment_date=t,content = content)
+        papers = [{
+        "paperid":1,"marks":[
+            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment]},
+            {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment,comment,comment]},
+        ]}
+        ]
+        moreComments=[]
+        for paper in papers:
+            if paper['paperid']==int(cmmPaperid):
+                for mark in paper['marks']:
+                    if mark['markid']==int(cmmMarkid):
+                        if myOrOther=='My comments':
+                            moreComments=mark['myComments'][3:]
+                        if myOrOther=='Other comments':
+                            moreComments=mark['otherComments'][3:]
+        res = dict(comment=moreComments)
         self.write(res)
 
 

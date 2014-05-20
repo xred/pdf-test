@@ -42,8 +42,17 @@
           alert('the email has been used')
         }
       }
-    })
+    });
+
   })
+    $("input").keydown(function(e){
+      var curKey = e.which;
+      if(curKey==13){
+        $(registerBtn).click();
+        return false
+      }
+    });
+
     pswInput2.blur(function() {
       if (!checkPsw()) {
         pswAlert.fadeIn();

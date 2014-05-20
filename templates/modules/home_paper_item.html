@@ -1,6 +1,6 @@
 <div class="panel panel-primary paper-panel">
         <div class="panel-heading">
-            <a href="#" class="paper-title"> paper{{papers['paperid']}} </a>
+            <a href="#" class="paper-title"> {{papers['paperid']}} </a>
             <!--
             <i class="button mp-btn-paperPanel-collapse">fold</i>
         -->
@@ -20,6 +20,7 @@
                                 My comments
                             </span>
                             <ul class="comment-list">
+                                {% if len(mark['myComments']) <= 3 %}
                                 {% for comment in mark['myComments'] %}
                                     <li>
                                         <div class="avatar-holder well">
@@ -40,15 +41,40 @@
                                         </div>
                                     </li>
                                 {% end %}
+                                {% end %}
+                                {% if len(mark['myComments']) > 3 %}
+                                {% for comment in mark['myComments'][0:3] %}
+                                    <li>
+                                        <div class="avatar-holder well">
+                                            <i class="icon-user"></i>
+                                        </div>
+                                        <div class="comment-body panel panel-default">
+                                            <div class="panel-heading">
+                                                <a href="#" class="comment-name">{{comment['comment_name']}}</a>
+                                                <span>
+                                                    commented {{ comment['comment_date']}}
+                                                </span>
+                                            </div>
+                                            <div class="panel-body">
+                                                <a href="#">
+                                                    {{comment['content']}}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% end %}    
+                                {% end %}
                             </ul>
+                            {% if len(mark['myComments']) > 3 %}
                             <a href="" class="moreComments">……</a>
-                        </div>
-                    </div>
+                            {% end %}
+                        </div>                  
                     <div class="otherComments">
                         <span class="panel-comment-title">
                             Other comments
                         </span>
                         <ul class="comment-list">
+                            {% if len(mark['otherComments']) <=3 %}
                             {% for comment in mark['otherComments'] %}
                             <li>
                                 <div class="avatar-holder well">
@@ -69,7 +95,33 @@
                                 </div>
                             </li>
                             {% end %}
+                            {% end %}
+                            {% if len(mark['otherComments']) >3 %}
+                            {% for comment in mark['otherComments'][0:3] %}
+                            <li>
+                                <div class="avatar-holder well">
+                                    <i class="icon-user"></i>
+                                </div>
+                                <div class="comment-body panel panel-default">
+                                    <div class="panel-heading">
+                                        <a href="#" class="comment-name">{{comment['comment_name']}}</a>
+                                        <span>
+                                            commented {{comment['comment_date']}}
+                                        </span>
+                                    </div>
+                                    <div class="panel-body">
+                                        <a href="#">
+                                            {{comment['content']}}
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            {% end %}
+                            {% end %}
                         </ul>
+                        {% if len(mark['otherComments']) > 3 %}
+                        <a href="" class="moreComments">……</a>
+                        {% end %}
                     </div>
                 </div>
                 {% end %}

@@ -29,6 +29,27 @@
         }
       })
     });
+    $("input").keydown(function(e){
+      var curKey = e.which;
+      if(curKey==13){
+        $(loginBtn).click();
+        return false
+      }
+    });
+    // $("input#inputEmail").keydown(function(e){
+    //   var curKey = e.which;
+    //   if(curKey==13){
+    //     $(loginBtn).click();
+    //     return false
+    //   }
+    // });
+    // $("input#inputPassword").keydown(function(e){
+    //   var curKey = e.which;
+    //   if(curKey==13){
+    //     $(loginBtn).click();
+    //     return false
+    //   }
+    // });
     emailInput.focus(function() {
       return loginAlert.fadeOut();
     });
