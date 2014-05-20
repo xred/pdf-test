@@ -8,7 +8,6 @@
                 markid = $(node).parent().parent().prev().find("a")[0].innerHTML;
                 paperid = $(node).parents("div.panel-body").filter(".paper-panel-body").prev().find("a")[0].innerHTML
                 myOrOther = $(node).parent().find("span.panel-comment-title")[0].innerHTML
-                console.log(markid)
                 req = jQuery.ajax({
                     url:'/home',
                     type:'POST',
@@ -18,6 +17,10 @@
                         myOrOther:myOrOther
                     },
                     dataType:'json',
+                    beforeSend:function(xhr){
+                        $(node).html('Loading......');
+                        $(node).removeAttr('href');
+                    },
                     error:function(data,xhr){
                         console.log(1)
                     },

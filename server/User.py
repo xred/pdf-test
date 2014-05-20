@@ -85,6 +85,7 @@ class Home(BaseHandler):
                         if myOrOther=='Other comments':
                             moreComments=mark['otherComments'][3:]
         res = dict(comment=moreComments)
+        time.sleep(3)
         self.write(res)
 
 
