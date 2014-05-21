@@ -35,9 +35,10 @@ class Register(BaseHandler):
         self.render('register.html',page='register')
     def post(self):
         email = self.get_argument('email')
+        print email
         psw = self.get_argument('psw')
         nickname = self.get_argument('nickname')
-        if not UserMod.query(email=email) and not not UserMod.query(nickname=nickname):
+        if not UserMod.query(email=email) and not UserMod.query(nickname=nickname):
             UserMod.add(email,psw,nickname)
             res = dict(flag=1)
         else:
@@ -45,7 +46,6 @@ class Register(BaseHandler):
         self.write(res)
 
 class Home(BaseHandler):
-    papers=[]
     @Utils.authenticated
     def get(self):
         t = time.strftime("%Y.%m.%d",time.localtime())
@@ -53,8 +53,8 @@ class Home(BaseHandler):
         comment= dict(comment_name='nmsl',comment_date=t,content = content)
         papers = [{
         "paperid":1,"marks":[
-            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment]},
-            {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment,comment]},
+            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment,comment]},
+            {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment,comment,comment]},
         ]}
         ]
         data = dict(papers = papers)
@@ -71,7 +71,7 @@ class Home(BaseHandler):
         comment= dict(comment_name='nmsl',comment_date=t,content = content)
         papers = [{
         "paperid":1,"marks":[
-            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment]},
+            {"markid":1,"myComments":[comment,comment,comment,comment],"otherComments":[comment,comment,comment,comment]},
             {"markid":2,"myComments":[comment,comment,comment],"otherComments":[comment,comment,comment,comment,comment]},
         ]}
         ]
@@ -85,10 +85,14 @@ class Home(BaseHandler):
                         if myOrOther=='Other comments':
                             moreComments=mark['otherComments'][3:]
         res = dict(comment=moreComments)
-        time.sleep(3)
+        time.sleep(1)
         self.write(res)
 
 
 class HomePaperItemModule(tornado.web.UIModule):
     def render(self,papers):
         return self.render_string('modules/home_paper_item.html', papers=papers)
+
+class Setting(BaseHandler):
+    def get(self):
+        self.render('setting.html')

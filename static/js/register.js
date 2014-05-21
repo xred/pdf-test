@@ -39,7 +39,7 @@
         else{
           // console.log(2)
           addRegisterDis();
-          alert('the email has been used')
+          alert('the email or nickname has been used')
         }
       }
     });
@@ -63,6 +63,9 @@
     });
     pswInput2.focus(function() {
       return pswAlert.fadeOut();
+    });
+    nicknameInput.blur(function(){
+      return removeRegisterDis();
     });
     checkEmail = function() {
       var emailStr;
@@ -95,7 +98,7 @@
       }
     };
     removeRegisterDis = function() {
-      console.log("dsdas");
+      // console.log("dsdas");
       return registerBtn.removeAttr("disabled");
     };
     addRegisterDis = function() {

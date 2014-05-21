@@ -53,6 +53,7 @@ handlers = [
     (r"/register",User.Register),
     (r'/logout',User.Logout),
     (r"/home",User.Home),
+    (r"/setting",User.Setting),
     # static route
     (r"/static/(.*)",tornado.web.StaticFileHandler,dict(path=settings['static_path'])),
     (r"/js/(.*)",tornado.web.StaticFileHandler,dict(path=js_path)),

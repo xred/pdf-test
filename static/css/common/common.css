@@ -68,11 +68,27 @@ body {
   background-color: #4E77A5;
   border-color: #254970;
 }
+.mp-header-search-bar {
+  width: 200px;
+  margin: 10px 20px 0 0;
+  padding-left: 15px;
+}
+.mp-header-search-bar .form-control {
+  height: 28px;
+}
+.mp-header-search-bar .input-group-addon {
+  height: 28px;
+  cursor: pointer;
+  text-decoration: none;
+}
 .mp-footer {
   min-height: 80px;
   width: 100%;
-  background: #f2f2f2;
   text-align: center;
+  margin-top: 20px;
+}
+.mp-footer .container {
+  border-top: 1px solid #ddd;
   padding-top: 20px;
 }
 .mp-footer .mp-footer-list li {

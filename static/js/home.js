@@ -5,7 +5,7 @@
                 node = event.target;
                 tpl = $(node).prev("ul.comment-list").children(":first");
                 // console.log(tpl)
-                markid = $(node).parent().parent().prev().find("a")[0].innerHTML;
+                markid = $(node).parents('div.panel').filter('.panel-default').filter('.one-paper-position-panel').find("div.panel-heading").find('a')[0].innerHTML;
                 paperid = $(node).parents("div.panel-body").filter(".paper-panel-body").prev().find("a")[0].innerHTML
                 myOrOther = $(node).parent().find("span.panel-comment-title")[0].innerHTML
                 req = jQuery.ajax({
