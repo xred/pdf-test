@@ -60,11 +60,11 @@ class SingleCommentPage extends RightSectionPage
     console.log @commentData
     @initReplys()
     return null
-  initReplys:->
+  initReplys:(callback)->
     i.remove() for i in @replyItems
     @replyItems = []
     @UI['reply-list'].J.html "<div class='loading-mark'></div>"
-    call = @api.getReplys @commentData.commentid,(res)=>
+    @api.getReplys @commentData.commentid,(res)=>
       @UI['reply-list'].J.html ""
       if not res.success
         window.showMessage res.error_msg,"e"
@@ -81,6 +81,7 @@ class SingleCommentPage extends RightSectionPage
         item.on "replyToThis",(replyItems)=>
           @addReply replyItems
         @replyItems.push item
+      callback() if callback
   voteUpComment:->
     @api.voteupComment @commentData.commentid,(res)=>
       if not res.success
@@ -100,8 +101,8 @@ class SingleCommentPage extends RightSectionPage
     @rightSection.showEditPage "addReply",null,(content)=>
       @api.addReply @commentData.commentid,content,=>
         window.showMessage "Your reply has been added successfully."
-        @initReplys()
-        @commentsItem.updateReplyNum @replyItems.length
+        @initReplys =>
+          @commentsItem.updateReplyNum @commentData.commentid,@replyItems.length
             
 class window.RightSection extends Suzaku.Widget
   constructor:(app)->

@@ -124,10 +124,18 @@ class Reply(BaseHandler):
             pass
     @Utils.check_arguments("commentid","content")
     def add_reply(self):
+        cid = self.args['commentid']
+        res = CommentMod.query(commentid = cid)
+        if not res:
+            self.write(dict(success=False , error_msg = "invailid comment id"))
+            return
+        oldNum = res[0].replynum
         new_reply = ReplyMod.add(self.args["commentid"],
                               self.user_record.uid,
                               self.user_record.nickname,
                                  self.args["content"])
+        print oldNum
+        CommentMod.update(cid,replynum = oldNum+1)
         self.write(dict(success = True,replyid = new_reply.replyid))
 
     def update_content(self):

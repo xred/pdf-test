@@ -154,8 +154,8 @@
       return null;
     };
 
-    SingleCommentPage.prototype.initReplys = function() {
-      var call, i, _i, _len, _ref1,
+    SingleCommentPage.prototype.initReplys = function(callback) {
+      var i, _i, _len, _ref1,
         _this = this;
       _ref1 = this.replyItems;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -164,8 +164,8 @@
       }
       this.replyItems = [];
       this.UI['reply-list'].J.html("<div class='loading-mark'></div>");
-      return call = this.api.getReplys(this.commentData.commentid, function(res) {
-        var item, r, tpl, _j, _len1, _ref2, _results;
+      return this.api.getReplys(this.commentData.commentid, function(res) {
+        var item, r, tpl, _j, _len1, _ref2;
         _this.UI['reply-list'].J.html("");
         if (!res.success) {
           window.showMessage(res.error_msg, "e");
@@ -178,7 +178,6 @@
         _this.UI['replys-num'].J.html("" + res.replys.length + " replys").show();
         tpl = _this.UI['single-reply-li-tpl'].J.html();
         _ref2 = res.replys;
-        _results = [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           r = _ref2[_j];
           item = new ReplyItem(tpl, r);
@@ -186,9 +185,11 @@
           item.on("replyToThis", function(replyItems) {
             return _this.addReply(replyItems);
           });
-          _results.push(_this.replyItems.push(item));
+          _this.replyItems.push(item);
         }
-        return _results;
+        if (callback) {
+          return callback();
+        }
       });
     };
 
@@ -222,8 +223,9 @@
       return this.rightSection.showEditPage("addReply", null, function(content) {
         return _this.api.addReply(_this.commentData.commentid, content, function() {
           window.showMessage("Your reply has been added successfully.");
-          _this.initReplys();
-          return _this.commentsItem.updateReplyNum(_this.replyItems.length);
+          return _this.initReplys(function() {
+            return _this.commentsItem.updateReplyNum(_this.commentData.commentid, _this.replyItems.length);
+          });
         });
       });
     };

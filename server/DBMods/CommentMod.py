@@ -26,4 +26,3 @@ def delete(**selector):
 
 def update(commentid,**update):
     session.query(Comment).filter_by(commentid=commentid).update(update,synchronize_session=False)
-    #session.commit()
