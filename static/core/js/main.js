@@ -54,6 +54,25 @@
 
   })(Suzaku.EventEmitter);
 
+  window.showMessage = function(content, type) {
+    var msg;
+    if (type == null) {
+      type = "normal";
+    }
+    msg = new Suzaku.Widget("<div class='message'><span>" + content + "</span></div>");
+    if (type === "error" || type === "e") {
+      new Suzaku.Widget("<b class='error'>ERROR : </b>").insertTo(msg);
+    }
+    msg.J.hide();
+    msg.appendTo($("#global-message-container"));
+    msg.J.slideDown("fast");
+    return window.setTimeout((function() {
+      return msg.J.slideUp("slow", function() {
+        return msg.J.remove();
+      });
+    }), 5000);
+  };
+
   App = (function(_super) {
     var newCommentLock;
 
@@ -72,11 +91,16 @@
       am.setPath("/pdfview/");
       am.setMethod("get");
       am.declare("getComments", "/comment", ["aid=" + this.aid]);
+      am.declare("getReplys", "/reply", ["commentid"]);
       am.setMethod("post");
       am.declare("addComment", "/comment", ["action=add", "aid=" + this.aid, "content", "markdata"]);
       am.declare("addCommentToMark", "/comment", ["action=add", "aid=" + this.aid, "content", "markid"]);
+      am.declare("addReply", "/reply", ['action=add', 'commentid', "content"]);
       am.declare("voteupComment", "/comment", ["action=voteup", "commentid"]);
       am.declare("votedownComment", "/comment", ["action=votedown", "commentid"]);
+      am.setErrorHandler("all", function() {
+        return window.showMessage("Network error", "e");
+      });
       this.api = am.generate();
       tm = new Suzaku.TemplateManager;
       tm.setPath("/core/templates/");
@@ -91,6 +115,7 @@
       var _this = this;
       return this.initComments(function() {
         var p, pages, _i, _len, _ref;
+        window.showMessage("User comments loaded successfully.");
         _this.pages = [];
         _ref = pages = $(".page");
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -102,24 +127,52 @@
           if (newCommentLock) {
             return false;
           }
-          $("#newComment").addClass("toggled");
-          $(".marking-wrapper").removeClass("hide");
+          $("#newComment").addClass("active");
+          _this.showMarks();
           return _this.newComment();
         });
         $("#hideMarks").on("click", function() {
-          return $(".marking-wrapper").toggleClass("hide");
+          if (!_this.showMarks()) {
+            return _this.hideMarks();
+          }
+        });
+        $("#scaleSelect").on("change", function() {
+          return _this.handleResize();
+        });
+        $("#zoomIn,#zoomOut").on("click", function() {
+          return _this.handleResize();
         });
         return window.onresize = function() {
-          var _j, _len1, _ref1, _results;
-          _ref1 = _this.pages;
-          _results = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            p = _ref1[_j];
-            _results.push(p.onresize());
-          }
-          return _results;
+          return _this.handleResize();
         };
       });
+    };
+
+    App.prototype.handleResize = function() {
+      var p, _i, _len, _ref, _results;
+      _ref = this.pages;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        p = _ref[_i];
+        _results.push(p.onresize());
+      }
+      return _results;
+    };
+
+    App.prototype.showMarks = function() {
+      if (!$(".marking-wrapper").hasClass("hide")) {
+        return false;
+      }
+      $(".marking-wrapper").removeClass("hide");
+      return $("#hideMarks").removeClass("active");
+    };
+
+    App.prototype.hideMarks = function() {
+      if ($(".marking-wrapper").hasClass("hide")) {
+        return false;
+      }
+      $(".marking-wrapper").addClass("hide");
+      return $("#hideMarks").addClass("active");
     };
 
     App.prototype.initComments = function(callback) {
@@ -148,7 +201,7 @@
         }
       });
       return call.fail(function() {
-        return console.error("cannot get comments", arguments);
+        return window.showMessage("Cannot get comments", "e");
       });
     };
 
@@ -168,9 +221,6 @@
       success = function(content) {
         console.log(content);
         editPage.off("useColor");
-        if (content.replace(" ", "").length === "0") {
-          alert("Error: Content is Empty");
-        }
         return _this.newCommentSuccessed(page, content);
       };
       fail = function() {
@@ -190,14 +240,15 @@
         _this = this;
       newCommentLock = false;
       markData = page.getTempMarkData();
-      $("#newComment").removeClass("toggled");
+      $("#newComment").removeClass("active");
       console.log("new comment page:", page, "content:", content);
       page.newCommentCompleted();
       $(".rectMark").removeClass("unselectable");
       return call = this.api.addComment(content, markData, function(res) {
         if (!res.success) {
-          console.error(res.error_msg);
+          window.showMessage(res.error_msg, "error");
         }
+        window.showMessage("Comment and mark created successfully.");
         return _this.initComments(function() {
           _this.rightSection.initComments().resetStack().goInto(_this.rightSection.commentPage);
           return page.initMarks();
@@ -217,25 +268,8 @@
           p.newCommentCompleted();
         }
       }
-      $("#newComment").removeClass("toggled");
+      $("#newComment").removeClass("active");
       return $(".rectMark").removeClass("unselectable");
-    };
-
-    App.prototype.addCommentToMark = function(content, markData) {
-      var call, markid,
-        _this = this;
-      markid = markData.markid;
-      return call = this.api.addCommentToMark(content, markid, function(res) {
-        if (!res.success) {
-          console.error(res.error_msg);
-        }
-        return _this.initComments(function() {
-          return _this.rightSection.initComments().resetStack().goInto(_this.rightSection.commentPage, function() {
-            _this.rightSection.scrollToMarkComments(markid);
-            return _this.scrollToRectMark(markData);
-          });
-        });
-      });
     };
 
     App.prototype.getPageById = function(pageid) {
@@ -253,7 +287,7 @@
     App.prototype.scrollToRectMark = function(markData) {
       var markJ, page, targetTop,
         _this = this;
-      $(".marking-wrapper").removeClass("hide");
+      this.showMarks();
       page = this.getPageById(markData.pageid);
       markJ = $("#mark-" + markData.markid);
       targetTop = page.dom.offsetTop + parseInt(markJ.css("top").replace("xp", "")) - 30;
@@ -275,7 +309,8 @@
   RectMark = (function(_super) {
     __extends(RectMark, _super);
 
-    function RectMark(type, pageSize, data) {
+    function RectMark(type, page, pageSize, data) {
+      var _this = this;
       if (type == null) {
         type = "normal";
       }
@@ -283,6 +318,7 @@
       if (type === "temp") {
         this.tempType();
       } else {
+        this.page = page;
         this.data = data;
         this.id = data.markid;
         this.dom.id = "mark-" + this.id;
@@ -291,8 +327,24 @@
           color: data.markcolor
         });
         this.updateSize(pageSize);
+        this.dom.onclick = function() {
+          return _this.page.markActive(_this);
+        };
+        this.UI['move-to-bottom'].onclick = function(evt) {
+          evt.stopPropagation();
+          return _this.moveToBottom();
+        };
       }
     }
+
+    RectMark.prototype.moveToBottom = function() {
+      var _this = this;
+      this.insertTo(this.J.parent().get(0));
+      this.J.fadeOut("fast", function() {
+        return _this.J.fadeIn("fast");
+      });
+      return this.J.addClass("on-bottom").removeClass("focus").siblings().removeClass("on-bottom");
+    };
 
     RectMark.prototype.updateSize = function(pageSize) {
       var a;
@@ -558,17 +610,16 @@
     };
 
     Page.prototype.addMark = function(pageSize, markData) {
-      var item,
-        _this = this;
-      item = new RectMark("normal", pageSize, markData);
-      item.markData = markData;
+      var item;
+      item = new RectMark("normal", this, pageSize, markData);
       item.appendTo(this.markingWrapper);
-      item.dom.onclick = function() {
-        $(".rectMark").removeClass("focus");
-        item.J.addClass("focus");
-        return _this.app.rightSection.scrollToMarkComments(markData.markid);
-      };
       return item;
+    };
+
+    Page.prototype.markActive = function(item) {
+      $(".rectMark").removeClass("focus");
+      item.J.addClass("focus");
+      return this.app.rightSection.scrollToMarkComments(item.data.markid);
     };
 
     return Page;

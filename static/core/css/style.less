@@ -51,6 +51,26 @@ html{
 button{
 		cursor:pointer;
 }
+.toolbarButton.active{
+		background-color: #3EA6DC;
+		box-shadow: inset 0 0 6px rgba(14, 136, 164, 1);
+		border: 1px solid rgba(0, 58, 77, 1);
+}
+.loading-mark{
+		width:100%;
+		&::before{
+				@size:20px;
+				left: 50%;
+				top: 5px;
+				background-image: url("/core/img/loading.gif");
+				background-size:@size;
+				content:"";
+				width:@size;
+				height:@size;
+				position: absolute;
+				margin-left: -@size/2;
+		}
+}
 #newComment::before{
 		top:2px;
 		left:5px;
@@ -240,11 +260,19 @@ body{
 						}
 						.nickname{color:#3e3e3e; margin-right:8px;}
 						.date{color:#8a8a8a;font-size:12px;}
-						.content{color:@color-blue; margin-top:1px;}
+						.content{
+								color:@color-blue;
+								margin-top:1px;
+								height: 45px;
+								word-break: break-all;
+								overflow: hidden;
+								text-overflow: ellipsis;
+						}
 						.content-wrapper{
 								padding-top:6px;
 								display:block;
 								margin-left:55px;
+								margin-right:6px;
 						}
 				}
 		}
@@ -344,6 +372,7 @@ body{
 				}
 		}
 		.date{color: #999;font-size:12px;}
+		.replys-num{color: #999;font-size:12px;}
 		footer{
 				button{
 						background-color:transparent;
@@ -423,20 +452,23 @@ body{
 		}
 		.reply-list{
 				position:relative;
+				border-top: 1px solid #ccc;
 				z-index:1;
 				box-sizing:border-box;
-				margin-top: 6px;
+				margin-top: 10px;
+				p{color:#aaa;text-align:center;margin:5px;}
 				&::before{
 						width: 5px;
 						height: 5px;
 						content: url("/core/img/reply-up-arrow.png");
 						position: absolute;
-						top: -12px;
-						left: 77px;
+						top: -13px;
+						right: 19px;
 				}
 		}
 		.single-reply-li{
 				border-top:1px solid #dbdbdb;
+				&:first-child{border:none}
 				padding:8px 0;
 				.avatar{
 						margin-left:2px;
@@ -446,6 +478,7 @@ body{
 						float:left;
 				}
 				.content-wrapper{
+						p{text-align:left;color:#444;}
 						margin-left:45px;
 						.nickname{
 								color:@color-blue;
@@ -454,7 +487,10 @@ body{
 						.content{margin:5px 0;}
 				}
 				.vote-up-btn{float:right;}
-				.reply-btn{float:right;}
+				.reply-btn{
+						float:right;
+						margin-right:8px;
+				}
 		}
 }
 .marking-wrapper{
@@ -476,7 +512,33 @@ body{
 				.resizer{display:none;}
 				overflow:visible;
 				opacity:0.5;
-				&:hover{opacity:0.8;}
+				.hover-action-box{display:none;}
+				.ctr-btn-box{
+						position:absolute;
+						right:-31px;
+						top:0;
+						width:30px;
+						height:100%;
+						button{
+								display:inline-block;
+								background-color:rgba(0,0,0,0.15);
+								width:30px;
+								height:30px;
+								border:1px solid transparent;
+								border-radius:0 5px 5px 0;
+								color:#000;
+								&:hover{
+										color:#fff;
+								}
+						}
+				}
+				&:hover{
+						opacity:0.85;
+						.hover-action-box{display:inline-block;}
+				}
+				&.on-bottom{
+						opacity:0.25;
+				}
 				&.unselectable{
 						pointer-events: none;						
 				}
@@ -486,6 +548,7 @@ body{
 						opacity:1;
 				}
 				&.temp{
+						.hover-action-box{display:none !important;}
 						cursor:move;
 						.resizer{
 								background-color: #FFFFFF;
@@ -503,21 +566,25 @@ body{
 						background-color:@color1;
 						border-color:@color1-border;
 						.resizer{border-color:@color1-border;}
+						.ctr-btn-box button:hover{background-color:@color1-border;}
 				}
 				&.color2{
 						background-color:@color2;
 						border-color:@color2-border;
 						.resizer{border-color:@color2-border;}
+						.ctr-btn-box button:hover{background-color:@color2-border;}
 				}
 				&.color3{
 						background-color:@color3;
 						border-color:@color3-border;
 						.resizer{border-color:@color3-border;}
+						.ctr-btn-box button:hover{background-color:@color3-border;}
 				}
 				&.color4{
 						background-color:@color4;
 						border-color:@color4-border;
 						.resizer{border-color:@color4-border;}
+						.ctr-btn-box button:hover{background-color:@color4-border;}
 				}
 		}
 }
@@ -525,4 +592,109 @@ body{
 		margin-right:@right-section-width;
 		box-sizing:border-box;
 		border-right:1px solid #464646;
+}
+#global-message-container{
+		position:fixed;
+		z-index:999;
+		top:32px;
+		left:0;
+		.message{
+				font-size:14px;
+				background-color:rgba(0,0,0,0.75);
+				color:white;
+				padding:8px;
+				.error{
+						color:#EE403B;
+				}
+		}
+}
+.real-content-section{
+		body{
+				/* Font */
+				font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+				font-size: 12px;
+				/* Text color */
+				color: #333;
+				/* Remove the background color to make it transparent */
+				background-color: #fff;
+				margin: 20px;
+		}
+		.cke_editable {
+				font-size: 13px;
+				line-height: 1.6;
+		}
+		blockquote {
+				font-style: italic;
+				font-family: Georgia, Times, "Times New Roman", serif;
+				padding: 2px 0;
+				border-style: solid;
+				border-color: #ccc;
+				border-width: 0;
+		}
+		.cke_contents_ltr blockquote {
+				padding-left: 20px;
+				padding-right: 8px;
+				border-left-width: 5px;
+		}
+		.cke_contents_rtl blockquote
+		{
+				padding-left: 8px;
+				padding-right: 20px;
+				border-right-width: 5px;
+		}
+		a{
+				color: #0782C1;
+		}
+		ol,ul,dl {
+				*margin-right: 0px;
+	padding: 0 40px;
+		}
+		h1,h2,h3,h4,h5,h6 {
+				font-weight: normal;
+				line-height: 1.2;
+		}
+		hr {
+				border: 0px;
+				border-top: 1px solid #ccc;
+		}
+		img.right {
+				border: 1px solid #ccc;
+				float: right;
+				margin-left: 15px;
+				padding: 5px;
+		}
+		img.left {
+				border: 1px solid #ccc;
+				float: left;
+				margin-right: 15px;
+				padding: 5px;
+		}
+		pre {
+				white-space: pre-wrap; /* CSS 2.1 */
+				word-wrap: break-word; /* IE7 */
+		}
+		.marker {
+				background-color: Yellow;
+		}
+		span[lang] {
+				font-style: italic;
+		}
+		figure {
+				text-align: center;
+				border: solid 1px #ccc;
+				border-radius: 2px;
+				background: rgba(0,0,0,0.05);
+				padding: 10px;
+				margin: 10px 20px;
+				display: inline-block;
+		}
+		figure > figcaption {
+				text-align: center;
+				display: block; /* For IE8 */
+		}
+		a > img {
+				padding: 1px;
+				margin: 1px;
+				outline: 1px solid #0782C1;
+		}
 }

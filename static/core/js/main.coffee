@@ -25,6 +25,17 @@ class GlobalMouseListener extends Suzaku.EventEmitter
     if Object.keys(@_events).length is 0
       @unbindEvents()
 
+window.showMessage = (content,type="normal")->
+  msg = new Suzaku.Widget "<div class='message'><span>#{content}</span></div>"
+  if type is "error" or type is "e"
+    new Suzaku.Widget("<b class='error'>ERROR : </b>").insertTo(msg)
+  msg.J.hide()
+  msg.appendTo $("#global-message-container")
+  msg.J.slideDown "fast"
+  window.setTimeout (->
+    msg.J.slideUp "slow",-> msg.J.remove()
+    ),5000
+
 class App extends Suzaku.EventEmitter
   newCommentLock = false
   constructor:->
@@ -36,11 +47,15 @@ class App extends Suzaku.EventEmitter
     am.setPath "/pdfview/"
     am.setMethod "get"
     am.declare "getComments","/comment",["aid=#{@aid}"]
+    am.declare "getReplys","/reply",["commentid"]
     am.setMethod "post"
     am.declare "addComment","/comment",["action=add","aid=#{@aid}","content","markdata"]
     am.declare "addCommentToMark","/comment",["action=add","aid=#{@aid}","content","markid"]
+    am.declare "addReply","/reply",['action=add','commentid',"content"]
     am.declare "voteupComment","/comment",["action=voteup","commentid"]
     am.declare "votedownComment","/comment",["action=votedown","commentid"]
+    am.setErrorHandler "all",=>
+      window.showMessage "Network error","e"
     @api = am.generate()
     tm = new Suzaku.TemplateManager
     tm.setPath "/core/templates/"
@@ -50,20 +65,34 @@ class App extends Suzaku.EventEmitter
       @start()
   start:->
     @initComments =>
+      window.showMessage "User comments loaded successfully."
       @pages = []
       for p in pages = $(".page")
         @pages.push(new Page(this,p))
       @rightSection = new RightSection this
       $("#newComment").on "click",=>
         return false if newCommentLock
-        $("#newComment").addClass "toggled"
-        $(".marking-wrapper").removeClass "hide"
+        $("#newComment").addClass "active"
+        @showMarks()
         @newComment()
       $("#hideMarks").on "click",=>
-        $(".marking-wrapper").toggleClass "hide"
-      window.onresize = =>
-        for p in @pages
-          p.onresize()
+        if not @showMarks() then @hideMarks()
+      $("#scaleSelect").on "change",=> @handleResize()
+      $("#zoomIn,#zoomOut").on "click",=> @handleResize()
+      window.onresize = => @handleResize()
+  handleResize:->
+    for p in @pages
+      p.onresize()
+  showMarks:->
+    if not $(".marking-wrapper").hasClass "hide"
+      return false
+    $(".marking-wrapper").removeClass "hide"
+    $("#hideMarks").removeClass "active"
+  hideMarks:->
+    if $(".marking-wrapper").hasClass "hide"
+      return false
+    $(".marking-wrapper").addClass "hide"
+    $("#hideMarks").addClass "active"
   initComments:(callback)->
     call = @api.getComments (res)=>
       if res.success
@@ -76,7 +105,7 @@ class App extends Suzaku.EventEmitter
             m.comments.push c
       callback() if callback
     call.fail =>
-      console.error "cannot get comments",arguments
+      window.showMessage "Cannot get comments","e"
   newComment:()->
     newCommentLock = true
     $(".rectMark").removeClass("focus").addClass("unselectable")
@@ -89,8 +118,6 @@ class App extends Suzaku.EventEmitter
     success = (content)=>
       console.log content
       editPage.off "useColor"
-      if content.replace(" ","").length is "0"
-        alert "Error: Content is Empty"
       @newCommentSuccessed page,content
     fail = =>
       editPage.off "useColor"
@@ -103,13 +130,14 @@ class App extends Suzaku.EventEmitter
   newCommentSuccessed:(page,content)->
     newCommentLock = false
     markData = page.getTempMarkData()
-    $("#newComment").removeClass "toggled"
+    $("#newComment").removeClass "active"
     console.log "new comment page:",page,"content:",content
     page.newCommentCompleted()
     $(".rectMark").removeClass("unselectable")
     call = @api.addComment content,markData,(res)=>
       if not res.success
-        console.error res.error_msg
+        window.showMessage res.error_msg,"error"
+      window.showMessage "Comment and mark created successfully."
       @initComments =>
         @rightSection.initComments().resetStack().goInto @rightSection.commentPage
         page.initMarks()
@@ -118,22 +146,13 @@ class App extends Suzaku.EventEmitter
     if page then page.newCommentCompleted()
     else for p in @pages
       p.newCommentCompleted()
-    $("#newComment").removeClass "toggled"
+    $("#newComment").removeClass "active"
     $(".rectMark").removeClass("unselectable")
-  addCommentToMark:(content,markData)->
-    markid = markData.markid
-    call = @api.addCommentToMark content,markid,(res)=>
-      if not res.success
-        console.error res.error_msg
-      @initComments =>
-        @rightSection.initComments().resetStack().goInto @rightSection.commentPage,=>
-          @rightSection.scrollToMarkComments markid
-          @scrollToRectMark markData
   getPageById:(pageid)->
     res = page for page in @pages when parseInt(pageid) is parseInt(page.pageid)
     return res
   scrollToRectMark:(markData)->
-    $(".marking-wrapper").removeClass "hide"
+    @showMarks()
     page = @getPageById markData.pageid
     markJ = $("#mark-#{markData.markid}")
     targetTop = page.dom.offsetTop + parseInt(markJ.css("top").replace("xp","")) - 30
@@ -144,17 +163,26 @@ class App extends Suzaku.EventEmitter
     return true
 
 class RectMark extends Suzaku.Widget
-  constructor:(type="normal",pageSize,data)->
+  constructor:(type="normal",page,pageSize,data)->
     super window.tpls['rect-mark']
     if type is "temp"
       @tempType()
     else
+      @page = page
       @data = data
       @id = data.markid
       @dom.id = "mark-#{@id}"
       @J.addClass "color#{data.markcolor}"
       @J.css color:data.markcolor
       @updateSize pageSize
+      @dom.onclick = => @page.markActive this
+      @UI['move-to-bottom'].onclick = (evt)=>
+        evt.stopPropagation()
+        @moveToBottom()
+  moveToBottom:->
+    @insertTo @J.parent().get(0)
+    @J.fadeOut "fast",=>@J.fadeIn "fast"
+    @J.addClass("on-bottom").removeClass("focus").siblings().removeClass("on-bottom")
   updateSize:(pageSize)->
     a = 100
     @J.css
@@ -297,14 +325,13 @@ class Page extends Suzaku.Widget
       @marks.push @addMark pageSize,m
     return true
   addMark:(pageSize,markData)->
-    item = new RectMark "normal",pageSize,markData
-    item.markData = markData
+    item = new RectMark "normal",this,pageSize,markData
     item.appendTo @markingWrapper
-    item.dom.onclick = =>
-      $(".rectMark").removeClass("focus")
-      item.J.addClass("focus")
-      @app.rightSection.scrollToMarkComments markData.markid
     return item
+  markActive:(item)->
+    $(".rectMark").removeClass("focus")
+    item.J.addClass("focus")
+    @app.rightSection.scrollToMarkComments item.data.markid
       
 RunPDFViewer pdfUrl,=>
   window.globalMouseListener = new GlobalMouseListener()
