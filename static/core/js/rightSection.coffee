@@ -35,6 +35,7 @@ class EditPage extends RightSectionPage
     switch type
       when "newComment" then @UI['new-comment-options'].J.show()
       when "addComment" then @UI['add-comment-options'].J.show()
+      when "addReply" then @UI['add-reply-options'].J.show()
     CKEDITOR.instances.editPageEditor.setData(inputData)
     
 class SingleCommentPage extends RightSectionPage
@@ -260,6 +261,7 @@ class CommentsItem extends Suzaku.Widget
     item.data = data
     item.J.addClass "id-#{data.commentid}"
     item.UI.content.J.html data.content
+    item.UI.content.J.text item.UI.content.textContent
     item.UI.nickname.J.text data.nickname
     item.UI.date.J.text Utils.parseTime data.datetime*1000,"Y-M-D"
     item.UI['reply-num'].J.text data.replynum

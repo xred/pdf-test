@@ -105,6 +105,9 @@
           break;
         case "addComment":
           this.UI['add-comment-options'].J.show();
+          break;
+        case "addReply":
+          this.UI['add-reply-options'].J.show();
       }
       return CKEDITOR.instances.editPageEditor.setData(inputData);
     };
@@ -513,6 +516,7 @@
       item.data = data;
       item.J.addClass("id-" + data.commentid);
       item.UI.content.J.html(data.content);
+      item.UI.content.J.text(item.UI.content.textContent);
       item.UI.nickname.J.text(data.nickname);
       item.UI.date.J.text(Utils.parseTime(data.datetime * 1000, "Y-M-D"));
       item.UI['reply-num'].J.text(data.replynum);
