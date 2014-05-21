@@ -1,0 +1,116 @@
+.mp-inline-block {
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+}
+.container.mp-body {
+  min-height: 200px;
+  border: 1px solid #ddd;
+  padding: 55px 30px;
+  border-radius: 4px;
+  position: relative;
+  background: #fff;
+}
+.container.mp-body .nav > li > a {
+  position: relative;
+  display: block;
+  padding: 10px 25px;
+  font-size: 16px;
+}
+.container.mp-body:after {
+  content: "Setting";
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 2    2px;
+}
+.container.mp-body .setting-content {
+  min-height: 200px;
+}
+.container.mp-body .setting-content .mp-sc-block {
+  min-height: 100px;
+  margin-top: 30px;
+}
+.container.mp-body .setting-content .mp-sc-account .avatar-holder {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ddd;
+  float: left;
+  position: relative;
+  margin-right: 40px;
+  margin-bottom: 30px;
+}
+.container.mp-body .setting-content .mp-sc-account .avatar-holder img {
+  min-width: 100%;
+  min-height: 100%;
+}
+.container.mp-body .setting-content .mp-sc-account .avatar-holder:hover #btn-change-avatar {
+  display: block;
+}
+.container.mp-body .setting-content .mp-sc-account .avatar-holder #btn-change-avatar {
+  position: absolute;
+  bottom: 0;
+  padding: 4px 0;
+  width: 100%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.container.mp-body .setting-content .mp-sc-account .infos-holder {
+  float: left;
+}
+.container.mp-body .setting-content .mp-sc-account .infos-holder li {
+  line-height: 34px;
+  margin-bottom: 10px;
+}
+.container.mp-body .setting-content .mp-sc-account .infos-holder li .infos-title {
+  float: left;
+  color: #888;
+}
+.container.mp-body .setting-content .mp-sc-account .infos-holder li .infos-control {
+  max-width: 200px;
+  margin-left: 100px;
+}
+.container.mp-body .setting-content .mp-sc-account .infos-holder li .infos-control.input-bio {
+  width: 400px;
+  min-height: 80px;
+  max-width: none;
+  white-space: pre;
+  word-break: break-word;
+}
+.container.mp-body .setting-content .mp-sc-password li {
+  line-height: 34px;
+  margin-bottom: 10px;
+}
+.container.mp-body .setting-content .mp-sc-password li .psw-title {
+  float: left;
+  color: #888;
+}
+.container.mp-body .setting-content .mp-sc-password li .psw-control {
+  max-width: 200px;
+  margin-left: 140px;
+}
+.container.mp-body .setting-content .mp-sc-alert .alt-group {
+  margin-top: 10px;
+}
+.container.mp-body .setting-content .mp-sc-alert .psw-control {
+  margin-top: 10px;
+}
+.setting-title {
+  color: #999;
+  font-size: 16px;
+}
+.setting-alert {
+  margin-top: 10px;
+}
+.setting-alert button:focus {
+  outline: 0;
+}

@@ -1,0 +1,194 @@
+﻿{% extends "user_template.html" %}
+    {% block css %}
+    <link rel="stylesheet" type="text/css" href="css/bootstrap3/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/basic/mp-setting.css">
+    {% end %}
+    <!--header-->
+    {% block header %}
+    <div class="navbar navbar-fixed-top navbar-inverse mp-nav" role="banner">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="#" class="navbar-brand">MarkPaper</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="/home">Home</a>
+                    </li>
+                    <li>
+                        <a href="/pdfview">PDFView</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <div class="input-group mp-header-search-bar">
+                            <input type="text" class="form-control" placeholder="search sth...">
+                            <a class="input-group-addon">
+                                <i class="icon-search"></i> 
+                            </a>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mp-user-alert">
+                            <i class="icon-bell-alt"></i>
+                            <span class="badge">10</span>
+                        </a>
+                    </li>
+                    <li class="dropdown active">
+                        <a class="mp-user-nickName dropdown-toggle" data-toggle="dropdown">
+                            {{nickname}}
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu mp-user-dropdown">
+                            <li>
+                                <a href="/home">
+                                    <i class="icon-user"></i>
+                                    person page
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="icon-cog"></i>
+                                    setting
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="icon-signout"></i>
+                                    logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% end %}
+    <!--body-->
+    {% block body %}
+    <div class="container mp-body">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#">account</a>
+            </li>
+            <li>
+                <a href="setting_password.html">password</a>
+            </li>
+            <li>
+                <a href="setting_alert.html">alert</a>
+            </li>
+            <li>
+                <a href="setting_email.html">email</a>
+            </li>
+        </ul>
+        <div class="setting-content">
+            <div class="alert alert-danger setting-alert">
+                this is a common alert
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            </div>
+            <div class="mp-sc-account mp-sc-block">
+                <div class="avatar-holder">
+                    <a id="btn-change-avatar">change</a>
+                    <img src="http://p3.zhimg.com/4e/3e/4e3eb75ee_l.jpg" alt="">
+                </div>
+                <div class="infos-holder">
+                    <ul>
+                        <li>
+                            <span class="infos-title">Nick name</span>
+                            <input type="text" class="form-control infos-control">
+                        </li>
+                        <li>
+                            <span class="infos-title">Full name</span>
+                            <input type="text" class="form-control infos-control">
+                        </li>
+                        <li>
+                            <span class="infos-title">Email</span>
+                            <input type="text" class="form-control infos-control">
+                        </li>
+                        <li>
+                            <span class="infos-title">Institute</span>
+                            <div class="infos-control">
+                                <div class="btn-group">
+                                    <a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                        default institute
+                                        <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#">aaa</a></li>
+                                        <li><a href="#">aaaaa</a></li>
+                                        <li><a href="#">aaaaaaa</a></li>
+                                        <li><a href="#">aaaaaaaaa</a></li>
+                                        <li><a href="#">aaaaaaaaaa</a></li>
+                                        <li><a href="#">aaaaaaaaaaa</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="infos-title">BIO</span>
+                            <textarea type="text" class="form-control infos-control input-bio"></textarea>
+                        </li>
+                        <li>
+                            <a href="#" class="btn btn-primary infos-control">save</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="mp-sc-password mp-sc-block">
+                <ul>
+                    <li>
+                        <span class="psw-title">Current password</span>
+                        <input type="text" class="form-control psw-control">
+                    </li>
+                    <li>
+                        <span class="psw-title">New password</span>
+                        <input type="text" class="form-control psw-control">
+                    </li>
+                    <li>
+                        <span class="psw-title">Verify password</span>
+                        <input type="text" class="form-control psw-control">
+                    </li>
+                    <li>
+                        <a href="#" class="btn btn-primary psw-control">save</a>
+                    </li>
+                </ul>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="mp-sc-alert mp-sc-block">
+                <span class="setting-title">
+                    Change your types of reciving messages.
+                </span>
+                <div class="alt-group">
+                    <input type="checkbox">
+                    <span>type 1 *******</span>
+                </div>
+                <div class="alt-group">
+                    <input type="checkbox">
+                    <span>type 2 blablablabla</span>
+                </div>
+                <a href="#" class="btn btn-primary psw-control">save</a>
+            </div>
+
+            <div class="mp-sc-email mp-sc-block">
+
+            </div>
+        </div>
+    </div>
+    {% end %}
+
+    <!--footer-->
+    {% block script %}
+    <script type="text/javascript" src="css/bootstrap3/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/setting.js"></script>
+    {% end %}
+
