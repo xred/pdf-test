@@ -342,7 +342,7 @@ class Page extends Suzaku.Widget
 RunPDFViewer pdfUrl,=>
   window.globalMouseListener = new GlobalMouseListener()
   new App()
-  ckConfig = height:250
+  ckConfig = height:180
   CKEDITOR.replace "editPageEditor",ckConfig
 
 

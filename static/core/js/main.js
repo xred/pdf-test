@@ -639,7 +639,7 @@
     window.globalMouseListener = new GlobalMouseListener();
     new App();
     ckConfig = {
-      height: 250
+      height: 180
     };
     return CKEDITOR.replace("editPageEditor", ckConfig);
   });
