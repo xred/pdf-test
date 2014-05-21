@@ -152,7 +152,6 @@
         return _this.addReply();
       };
       this.UI.content.J.html(commentData.content);
-      console.log(this.commentData);
       this.initReplys();
       return null;
     };
@@ -257,8 +256,31 @@
       this.editPage = new EditPage(this.UI['edit-page']);
       this.singleCommentPage = new SingleCommentPage(this.UI['single-comment-page'], this);
       this.rightSectionPages = [this.commentPage, this.editPage, this.singleCommentPage];
+      this.initResize();
       this.initComments();
       return this.goInto(this.commentPage);
+    };
+
+    RightSection.prototype.initResize = function() {
+      var _this = this;
+      this.UI.resizer.onmousedown = function(evt) {
+        var mouseStartPos, oldRightSectionWidth;
+        mouseStartPos = {
+          x: evt.clientX,
+          y: evt.clientY
+        };
+        oldRightSectionWidth = _this.dom.offsetWidth;
+        return window.globalMouseListener.on("mousemove", "rightSectionResize", function(evt) {
+          var newWidth, x;
+          x = evt.clientX;
+          newWidth = oldRightSectionWidth - (x - mouseStartPos.x);
+          _this.J.css("width", newWidth);
+          return $("#viewerContainer").css("margin-right", newWidth);
+        });
+      };
+      return this.UI.resizer.onmouseup = function() {
+        return window.globalMouseListener.off("mousemove", "rightSectionResize");
+      };
     };
 
     RightSection.prototype.initComments = function() {
@@ -550,7 +572,6 @@
     function ReplyItem(tpl, data) {
       var _this = this;
       ReplyItem.__super__.constructor.call(this, tpl);
-      console.log(data);
       this.data = data;
       this.UI['reply-nickname'].J.text(data.nickname);
       this.UI['reply-date'].J.text(Utils.parseTime(data.datetime * 1000, "Y-M-D"));

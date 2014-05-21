@@ -255,6 +255,12 @@ class Page extends Suzaku.Widget
       @tempRectMark.appendTo @markingWrapper
     @dom.onmouseup = (evt)=>
       return false if not @mouseStartPos
+      data = @tempRectMark.getData()
+      if data.width < 6 or data.height < 6
+        @tempRectMark.remove()
+        @tempRectMark = null
+        @mouseStartPos = null
+        return false
       @mouseStartPos = null
       @clearListeners()
       @app.newCommentConfirm this
@@ -336,7 +342,7 @@ class Page extends Suzaku.Widget
 RunPDFViewer pdfUrl,=>
   window.globalMouseListener = new GlobalMouseListener()
   new App()
-  ckConfig = height:400
+  ckConfig = height:250
   CKEDITOR.replace "editPageEditor",ckConfig
 
 

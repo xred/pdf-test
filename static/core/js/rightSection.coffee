@@ -58,7 +58,6 @@ class SingleCommentPage extends RightSectionPage
     @UI['vote-down'].onclick = => @voteDownComment()
     @UI['reply-btn'].onclick = => @addReply()
     @UI.content.J.html commentData.content
-    console.log @commentData
     @initReplys()
     return null
   initReplys:(callback)->
@@ -120,8 +119,20 @@ class window.RightSection extends Suzaku.Widget
     @editPage = new EditPage @UI['edit-page']
     @singleCommentPage = new SingleCommentPage @UI['single-comment-page'],this
     @rightSectionPages = [@commentPage,@editPage,@singleCommentPage]
+    @initResize()
     @initComments()
     @goInto @commentPage
+  initResize:->
+    @UI.resizer.onmousedown = (evt)=>
+      mouseStartPos = x:evt.clientX,y:evt.clientY
+      oldRightSectionWidth = @dom.offsetWidth
+      window.globalMouseListener.on "mousemove","rightSectionResize",(evt)=>
+        x = evt.clientX
+        newWidth = oldRightSectionWidth - (x - mouseStartPos.x)
+        @J.css "width",newWidth
+        $("#viewerContainer").css "margin-right",newWidth
+    @UI.resizer.onmouseup = =>
+      window.globalMouseListener.off "mousemove","rightSectionResize"
   initComments:->
     i.remove() for i in @commentsItems
     @commentsItems = []
@@ -279,7 +290,6 @@ class CommentsItem extends Suzaku.Widget
 class ReplyItem extends Suzaku.Widget
   constructor:(tpl,data)->
     super tpl
-    console.log data
     @data = data
     @UI['reply-nickname'].J.text data.nickname
     @UI['reply-date'].J.text Utils.parseTime(data.datetime*1000,"Y-M-D")
