@@ -631,7 +631,7 @@
     window.globalMouseListener = new GlobalMouseListener();
     new App();
     ckConfig = {
-      height: 400
+      height: 250
     };
     return CKEDITOR.replace("editPageEditor", ckConfig);
   });
