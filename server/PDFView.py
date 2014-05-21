@@ -107,18 +107,28 @@ class Comment(BaseHandler):
     
 class Reply(BaseHandler):
     @Utils.authenticated
+    @Utils.check_arguments("commentid")
+    def get(self):
+        res = ReplyMod.query(True,commentid = self.args['commentid'])
+        self.write(dict(success=True,replys=res))
+        
+    @Utils.authenticated
     @Utils.check_arguments("action")
     def post(self):
-        action == self.args['action']
+        action = self.args['action']
         if action == "add":
-            pass
+            self.add_reply()
         elif action == "updateContent":
             pass
         elif action == "voteup":
             pass
-            
+    @Utils.check_arguments("commentid","content")
     def add_reply(self):
-        pass
+        new_reply = ReplyMod.add(self.args["commentid"],
+                              self.user_record.uid,
+                              self.user_record.nickname,
+                                 self.args["content"])
+        self.write(dict(success = True,replyid = new_reply.replyid))
 
     def update_content(self):
         pass

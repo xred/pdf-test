@@ -1,3 +1,4 @@
+Utils = Suzaku.Utils
 class RightSectionPage extends Suzaku.Widget
   animateRate = "normal"
   init:-> return true
@@ -40,6 +41,7 @@ class SingleCommentPage extends RightSectionPage
   constructor:(target,@rightSection)->
     target.J.html window.tpls['single-comment-item']
     super target
+    @replyItems = []
     @api = @rightSection.app.api
     @UI.back.onclick = (evt)=>
       evt.stopPropagation()
@@ -48,41 +50,64 @@ class SingleCommentPage extends RightSectionPage
     @commentData = commentData
     @commentsItem = commentsItem
     @UI.nickname.J.text commentData.nickname
+    @UI.date.J.text Utils.parseTime(commentData.datetime*1000,"Y-M-D")
     @UI["vote-up-num"].J.text commentData.praisenum
     @UI['vote-up'].onclick = => @voteUpComment()
     @UI['vote-down'].onclick = => @voteDownComment()
     @UI['vote-down'].onclick = => @voteDownComment()
-    @UI['reply'].onclick = => @addReply()
+    @UI['reply-btn'].onclick = => @addReply()
     @UI.content.J.html commentData.content
-    for d in [1..5]
-      item = new Suzaku.Widget @UI['single-reply-li-tpl'].J.html()
-      item.appendTo @UI['reply-list']
+    console.log @commentData
+    @initReplys()
     return null
+  initReplys:->
+    i.remove() for i in @replyItems
+    @replyItems = []
+    @UI['reply-list'].J.html "<div class='loading-mark'></div>"
+    call = @api.getReplys @commentData.commentid,(res)=>
+      @UI['reply-list'].J.html ""
+      if not res.success
+        window.showMessage res.error_msg,"e"
+        return false
+      #res.replys = [1..5]
+      if not res.replys
+        @UI['reply-list'].J.html "<p>No replys. click the reply icon to add one.</p>"
+        return false
+      @UI['replys-num'].J.html("#{res.replys.length} replys").show()
+      tpl = @UI['single-reply-li-tpl'].J.html()
+      for r in res.replys
+        item = new ReplyItem tpl,r
+        item.appendTo @UI['reply-list']
+        item.on "replyToThis",(replyItems)=>
+          @addReply replyItems
+        @replyItems.push item
   voteUpComment:->
-    call = @api.voteupComment @commentData.commentid,(res)=>
+    @api.voteupComment @commentData.commentid,(res)=>
       if not res.success
         return console.error res.error_msg
       @commentData.praisenum = res.praisenum
       @UI['vote-up-num'].J.text res.praisenum
       @commentsItem.updateVoteupNum @commentData.commentid,res.praisenum
-    call.fail =>
-      console.error arguments
   voteDownComment:->
-    call = @api.votedownComment @commentData.commentid,(res)=>
+    @api.votedownComment @commentData.commentid,(res)=>
       if not res.success
         return console.error res.error_msg
       @commentData.praisenum = res.praisenum
       @UI['vote-up-num'].J.text res.praisenum
       @commentsItem.updateVoteupNum @commentData.commentid,res.praisenum
-    call.fail =>
-      console.error arguments
-  addReply:->
+  addReply:(target)->
     console.log "add reply"
+    @rightSection.showEditPage "addReply",null,(content)=>
+      @api.addReply @commentData.commentid,content,=>
+        window.showMessage "Your reply has been added successfully."
+        @initReplys()
+        @commentsItem.updateReplyNum @replyItems.length
             
 class window.RightSection extends Suzaku.Widget
   constructor:(app)->
     super "#right-section"
     @app = app
+    @api = app.api
     @commentsItems = []
     @rightSectionPages = []
     @pageStack = []
@@ -153,7 +178,7 @@ class window.RightSection extends Suzaku.Widget
     @UI['edit-accept-btn'].onclick = =>
       content = CKEDITOR.instances.editPageEditor.getData()
       if not content.replace(" ","")
-        return alert "content is required!"
+        return window.showMessage "content is required!","error"
       success content if success
       @goBack()
     @UI['edit-cancel-btn'].onclick = =>
@@ -170,10 +195,18 @@ class window.RightSection extends Suzaku.Widget
     @app.scrollToRectMark commentsItem.markData
     commentsItem.J.addClass("focus").siblings().removeClass("focus")
   addComment:(commentsItem)->
-    success = (content)=>
-      @app.addCommentToMark content,commentsItem.markData
-    @showEditPage "addComment",null,success
-        
+    markData = commentsItem.markData
+    @showEditPage "addComment",null,(content)=>
+      markid = markData.markid
+      @api.addCommentToMark content,markid,(res)=>
+        window.showMessage "Comment added successfully."
+        if not res.success
+          window.showMessage res.error_msg,"error"
+        @app.initComments =>
+          @initComments().resetStack().goInto @commentPage,=>
+            @scrollToMarkComments markid
+            @app.scrollToRectMark markData
+            
 class CommentsItem extends Suzaku.Widget
   constructor:(rightSection,comments,markData)->
     super window.tpls['comments-item']
@@ -227,6 +260,7 @@ class CommentsItem extends Suzaku.Widget
     item.J.addClass "id-#{data.commentid}"
     item.UI.content.J.html data.content
     item.UI.nickname.J.text data.nickname
+    item.UI.date.J.text Utils.parseTime data.datetime*1000,"Y-M-D"
     item.UI['reply-num'].J.text data.replynum
     item.UI['vote-up-num'].J.text data.praisenum
     item.dom.onclick = => @rightSection.showSingleComment item.data,this,@markData
@@ -239,3 +273,17 @@ class CommentsItem extends Suzaku.Widget
     item.UI['num'].J.text @comments.length - 2
     @unfoldBtn = item
     
+class ReplyItem extends Suzaku.Widget
+  constructor:(tpl,data)->
+    super tpl
+    console.log data
+    @data = data
+    @UI['reply-nickname'].J.text data.nickname
+    @UI['reply-date'].J.text Utils.parseTime(data.datetime*1000,"Y-M-D")
+    @UI['reply-content'].J.html data.content
+    @UI['reply-vote-up-num'].J.text data.praisenum
+    @UI['reply-reply-btn'].onclick = =>
+      @replyToThisReply()
+  replyToThisReply:->
+    console.log "reply to",this
+    @emit "replyToThis",this

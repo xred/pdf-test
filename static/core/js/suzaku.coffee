@@ -400,7 +400,7 @@ class Api extends EventEmitter
         console.warn arguments
         @onfail error,textStatus if typeof @onfail is "function"
         @onfail = null
-        @errorHandlers.requestFail() if @errorHandlers.requestFail
+        @errorHandlers.all() if @errorHandlers.all
         if @errorHandlers[req.status]
           @errorHandlers[req.status]()
         evtData =
@@ -448,9 +448,8 @@ class ApiManager extends EventEmitter
       return console.error "Illegal method #{method} --Suzaku.ApiManager"
     @method = method
   setErrorHandler:(errorCode,handler)->
+    #error code cold be 'all'
     @errorHandlers[errorCode] = handler
-  setRequestFailHandler:(handler)->
-    @errorHandlers.requestFail = handler
   declare:()->
     name = arguments[0]
     if typeof arguments[1] is "string"

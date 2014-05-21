@@ -8,7 +8,8 @@ def add(cid,uid,nickname,content):
         userid = uid,
         nickname = nickname,
         content = content,
-        datetime = int(time.time())
+        datetime = int(time.time()),
+        praisenum = 0,
     )
     session.add(reply)
     session.commit()

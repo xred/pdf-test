@@ -712,8 +712,8 @@
             _this.onfail(error, textStatus);
           }
           _this.onfail = null;
-          if (_this.errorHandlers.requestFail) {
-            _this.errorHandlers.requestFail();
+          if (_this.errorHandlers.all) {
+            _this.errorHandlers.all();
           }
           if (_this.errorHandlers[req.status]) {
             _this.errorHandlers[req.status]();
@@ -799,10 +799,6 @@
 
     ApiManager.prototype.setErrorHandler = function(errorCode, handler) {
       return this.errorHandlers[errorCode] = handler;
-    };
-
-    ApiManager.prototype.setRequestFailHandler = function(handler) {
-      return this.errorHandlers.requestFail = handler;
     };
 
     ApiManager.prototype.declare = function() {
