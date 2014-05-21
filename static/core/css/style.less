@@ -100,11 +100,20 @@ body{
 		box-sizing:border-box;
 		padding: 22px 1px 0 1px;
 		font-size:14px;
-		overflow: hidden;
+		.resizer{
+				cursor: ew-resize;
+				height: 100%;
+				width: 6px;
+				position: absolute;
+				left: -2px;
+				top: 0;
+				z-index: 9;
+		}
 		.inner{
 				display: block;
 				position: relative;
 				height: 100%;
+				overflow: hidden;
 		}
 		.right-section-page{
 				box-sizing: border-box;

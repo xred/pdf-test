@@ -468,7 +468,15 @@
         return _this.tempRectMark.appendTo(_this.markingWrapper);
       };
       this.dom.onmouseup = function(evt) {
+        var data;
         if (!_this.mouseStartPos) {
+          return false;
+        }
+        data = _this.tempRectMark.getData();
+        if (data.width < 6 || data.height < 6) {
+          _this.tempRectMark.remove();
+          _this.tempRectMark = null;
+          _this.mouseStartPos = null;
           return false;
         }
         _this.mouseStartPos = null;
