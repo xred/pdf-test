@@ -60,7 +60,7 @@ class Home(BaseHandler):
         data = dict(papers = papers)
         test = papers[0]['marks'][0]['myComments'][0]['comment_name']
         # print test
-        self.render('home.html',nickname=self.user_record.nickname,data = data)
+        self.render('home.html',nickname=self.user_record.nickname,data = data,page='Home')
     def post(self):
         cmmMarkid = self.get_argument('markid')
         cmmPaperid = self.get_argument('paperid')
@@ -94,5 +94,6 @@ class HomePaperItemModule(tornado.web.UIModule):
         return self.render_string('modules/home_paper_item.html', papers=papers)
 
 class Setting(BaseHandler):
+    @Utils.authenticated
     def get(self):
-        self.render('setting.html')
+        self.render('setting.html',page='Setting',nickname=self.user_record.nickname)

@@ -18,7 +18,7 @@
                     },
                     dataType:'json',
                     beforeSend:function(xhr){
-                        $(node).html('Loading......');
+                        $(node).html('<img class="avatar" src="/core/img/loading.gif">');
                         $(node).removeAttr('href');
                     },
                     error:function(data,xhr){

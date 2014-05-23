@@ -3,6 +3,7 @@ from sqlalchemy import *
 from sqlalchemy.orm import *
 from sqlalchemy.types import CHAR, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.schema import Table
 from sqlalchemy.dialects.mysql import \
         BIGINT, BINARY, BIT, BLOB, BOOLEAN, CHAR, DATE, \
         DATETIME, DECIMAL, DECIMAL, DOUBLE, ENUM, FLOAT, INTEGER, \
@@ -25,29 +26,14 @@ engine = create_engine('mysql://%s:%s@%s/%s?charset=%s'%(
     db_config['host'],
     db_config['db'],
     db_config['charset']),
-        echo=False)
+    echo=False,
+    pool_recycle=7200)
 DB_SESSION = sessionmaker(bind=engine)
 session = DB_SESSION()
 
 BaseModel = declarative_base()
 
-def queryWrapper(func):
-    """
-    @deco
-    """
-    def wrapper(toDict = False,*args,**kwargs):
-        resList = []
-        res = func(*args,**kwargs)
-        if len(res) == 0:
-            return None
-        if not toDict:
-            return res;
-        else:
-            for i in res:
-                del i.__dict__['_sa_instance_state']
-                resList.append(i.__dict__)
-            return resList
-    return wrapper
+#object
 
 class User(BaseModel):
     """a map of user table"""
@@ -105,8 +91,40 @@ class Reply(BaseModel):
     datetime = Column(Integer)
     praisenum = Column(MEDIUMINT(8))
     
+
+#relation
+#http://docs.sqlalchemy.org/en/rel_0_9/orm/relationships.html
+vote_for_comment_relation = Table('vote_for_comment_relation',BaseModel.metadata,
+    Column('commentid', MEDIUMINT(8), ForeignKey('markpaper_comment.commentid')),
+    Column('uid', MEDIUMINT(8), ForeignKey('markpaper_user.uid')),
+    Column('type',Integer),
+    Column('datetime',Integer)
+    )
+
+
+#operation
+def queryWrapper(func):
+    """
+    @deco
+    """
+    def wrapper(toDict = False,*args,**kwargs):
+        resList = []
+        res = func(*args,**kwargs)
+        if len(res) == 0:
+            return None
+        if not toDict:
+            return res;
+        else:
+            for i in res:
+                del i.__dict__['_sa_instance_state']
+                resList.append(i.__dict__)
+            return resList
+    return wrapper
+
 def create_tables():
     BaseModel.metadata.create_all(engine)
 
 def drop_db():
     BaseModel.metadata.drop_all(engine)
+
+
