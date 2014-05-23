@@ -1,17 +1,34 @@
 <div class="comments-item" >
 	<header >
-		<button class="fold" data-id="fold" style="display:none;" >fold</button>
-		<button class="add-comment" data-id="add-comment" title="Add a comment"><img src="/core/img/icon-add.png"  /></button>
+		<button class="fold btn" data-id="fold" style="display:none;" >fold</button>
+		<button class="add-comment btn" data-id="add-comment" title="Add a comment"><img src="/core/img/icon-add.png"  /></button>
 	</header>
 	<ul data-id="list" >
 	</ul>
+	<div class="add-comment-box hide" data-id="add-comment-box" >
+		<textarea type="text" placeholder="please input your comment" data-id="add-comment-content" ></textarea>
+		<footer >
+			<button data-id="go-to-editer" class="left" ><i class="icon-edit"></i> use editer</button>
+			<button data-id="add-comment-cancel" ><i class="icon-remove"></i> cancel</button>
+			<button data-id="add-comment-confirm" ><i class="icon-ok"></i> add</button>
+		</footer>
+	</div>
 	<template data-id="unfold-btn-tpl" >
 		<li class="unfold" >
 			<p><span data-id="num" >14</span> comments...click to unfold</p>
 		</li>
 	</template>
 	<template data-id="single-comment-li-tpl" >
-		<li class="single-comment-li" >
+		<li class="single-comment-li folded" >
+			<div class="vote-box" >
+				<button class="vote-up btn" data-id="vote-up" >
+					<i class="icon-caret-up"></i>
+					<span class="vote-up-num" data-id="vote-up-num" >52341</span>
+				</button>
+				<button class="vote-down btn" data-id="vote-down" >
+					<i class="icon-caret-down"></i>
+				</button>
+			</div>
 			<img class="avatar" data-id="avatar" src="/core/img/test-avatar.png"></img>
 			<div class="content-wrapper" >
 				<p><span class="nickname" data-id="nickname" >Roxasora</span>
@@ -21,14 +38,11 @@
 				</section>
 			</div>
 			<footer >
-				<div >
-					<img src="/static/core/img/icon-reply.png"  />
-					<span class="reply-num" data-id="reply-num" >20</span>
-				</div>
-				<div >
-					<img src="/static/core/img/icon-vote-up.png"  />
-					<span class="vote-up-num" data-id="vote-up-num" >30</span>
-				</div>
+				<button data-id="fold-btn" class="fold-btn" ><i class="icon-minus"></i> fold</button>
+				<button data-id="reply-btn" class="right" >
+					<i class="icon-comment-alt"></i>
+					<span class="reply-num" data-id="reply-num" >20</span> replys
+				</button>
 			</footer>
 		</li>
 	</template>

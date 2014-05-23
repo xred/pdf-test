@@ -1,16 +1,16 @@
 <div class="single-comment-item">
 	<header class="single-comment-item-header" data-id="header" >
-		<button class="back" data-id="back" title="Back to all comments" >Back</button>
+		<button class="back btn" data-id="back" title="Back to all comments" >Back</button>
 	</header>
 	<div class="inner" >
 		<div class="comment" data-id="comment" >
 			<header class="header-part" >
 				<div class="vote-box" >
-					<button class="vote-up" data-id="vote-up" >
+					<button class="vote-up btn" data-id="vote-up" >
 						<i class="icon-caret-up"></i>
 						<span class="vote-up-num" data-id="vote-up-num" >52341</span>
 					</button>
-					<button class="vote-down" data-id="vote-down" >
+					<button class="vote-down btn" data-id="vote-down" >
 						<i class="icon-caret-down"></i>
 					</button>
 				</div>
@@ -23,14 +23,20 @@
 			<footer class="footer-part" >
 				<span class="date" data-id="date" >2014-12-13</span>
 				<span class="replys-num" data-id="replys-num" style="display:none;" >20 replys </span>
-				<button class="reply-btn" data-id="reply-btn" title="reply to this comment">
-					
+				<button class="reply-btn" data-id="reply-btn" title="reply to this comment" style="display:none;" >
 					<i class="icon-reply"></i>
 				</button>
 			</footer>
 		</div>
 		<ul class="reply-list" data-id="reply-list" >
 		</ul>
+	</div>
+	<div class="add-reply-box" data-id="add-reply-box" >
+		<textarea type="text" placeholder="please input your comment" data-id="add-reply-content" ></textarea>
+		<footer >
+			<button data-id="go-to-editer" class="left" ><i class="icon-edit"></i> use editer</button>
+			<button data-id="add-reply-confirm" ><i class="icon-ok"></i> add</button>
+		</footer>
 	</div>
 	<template data-id="single-reply-li-tpl">
 		<li class="single-reply-li"  >

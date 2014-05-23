@@ -137,10 +137,13 @@ class App extends Suzaku.EventEmitter
     call = @api.addComment content,markData,(res)=>
       if not res.success
         window.showMessage res.error_msg,"error"
+      markData.markid = res.markid
       window.showMessage "Comment and mark created successfully."
       @initComments =>
         @rightSection.initComments().resetStack().goInto @rightSection.commentPage
+        @rightSection.scrollToMarkComments markData.markid
         page.initMarks()
+        @scrollToRectMark markData
   newCommentCanceled:(page)->
     newCommentLock = false
     if page then page.newCommentCompleted()
@@ -175,14 +178,27 @@ class RectMark extends Suzaku.Widget
       @J.addClass "color#{data.markcolor}"
       @J.css color:data.markcolor
       @updateSize pageSize
-      @dom.onclick = => @page.markActive this
-      @UI['move-to-bottom'].onclick = (evt)=>
+      @dom.onclick = =>
+        @active()
+      @UI['dismiss'].onclick = (evt)=>
         evt.stopPropagation()
-        @moveToBottom()
-  moveToBottom:->
+        @dismiss()
+      @UI['undismiss'].onclick = (evt)=>
+        evt.stopPropagation()
+        @undismiss()
+  active:->
+    $("#comments-#{@id}").slideDown("fast")
+    @page.markActive this
+  undismiss:->
+    if not @J.hasClass("dismiss") then return false
+    @appendTo @J.parent().get(0)
+    @J.removeClass("dismiss")
+    @active()
+  dismiss:->
+    if @J.hasClass("dismiss") then return false
     @insertTo @J.parent().get(0)
-    @J.fadeOut "fast",=>@J.fadeIn "fast"
-    @J.addClass("on-bottom").removeClass("focus").siblings().removeClass("on-bottom")
+    @J.addClass("dismiss").removeClass("focus")
+    $("#comments-#{@id}").slideUp("fast")
   updateSize:(pageSize)->
     a = 100
     @J.css

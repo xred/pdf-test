@@ -248,10 +248,13 @@
         if (!res.success) {
           window.showMessage(res.error_msg, "error");
         }
+        markData.markid = res.markid;
         window.showMessage("Comment and mark created successfully.");
         return _this.initComments(function() {
           _this.rightSection.initComments().resetStack().goInto(_this.rightSection.commentPage);
-          return page.initMarks();
+          _this.rightSection.scrollToMarkComments(markData.markid);
+          page.initMarks();
+          return _this.scrollToRectMark(markData);
         });
       });
     };
@@ -328,22 +331,40 @@
         });
         this.updateSize(pageSize);
         this.dom.onclick = function() {
-          return _this.page.markActive(_this);
+          return _this.active();
         };
-        this.UI['move-to-bottom'].onclick = function(evt) {
+        this.UI['dismiss'].onclick = function(evt) {
           evt.stopPropagation();
-          return _this.moveToBottom();
+          return _this.dismiss();
+        };
+        this.UI['undismiss'].onclick = function(evt) {
+          evt.stopPropagation();
+          return _this.undismiss();
         };
       }
     }
 
-    RectMark.prototype.moveToBottom = function() {
-      var _this = this;
+    RectMark.prototype.active = function() {
+      $("#comments-" + this.id).slideDown("fast");
+      return this.page.markActive(this);
+    };
+
+    RectMark.prototype.undismiss = function() {
+      if (!this.J.hasClass("dismiss")) {
+        return false;
+      }
+      this.appendTo(this.J.parent().get(0));
+      this.J.removeClass("dismiss");
+      return this.active();
+    };
+
+    RectMark.prototype.dismiss = function() {
+      if (this.J.hasClass("dismiss")) {
+        return false;
+      }
       this.insertTo(this.J.parent().get(0));
-      this.J.fadeOut("fast", function() {
-        return _this.J.fadeIn("fast");
-      });
-      return this.J.addClass("on-bottom").removeClass("focus").siblings().removeClass("on-bottom");
+      this.J.addClass("dismiss").removeClass("focus");
+      return $("#comments-" + this.id).slideUp("fast");
     };
 
     RectMark.prototype.updateSize = function(pageSize) {

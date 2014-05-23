@@ -67,7 +67,7 @@ class Comment(BaseHandler):
             uid = self.user_record.uid
             nickname = self.user_record.nickname
             new_comment = CommentMod.add(uid,nickname,aid,mid,content)
-            self.write(dict(success=True,commentid=new_comment.commentid))
+            self.write(dict(success=True,commentid=new_comment.commentid,markid=mid))
         else:
             self.abort(400)
     def add_mark(self,data):
