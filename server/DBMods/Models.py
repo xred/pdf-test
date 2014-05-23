@@ -26,7 +26,8 @@ engine = create_engine('mysql://%s:%s@%s/%s?charset=%s'%(
     db_config['host'],
     db_config['db'],
     db_config['charset']),
-        echo=False)
+    echo=False,
+    pool_recycle=7200)
 DB_SESSION = sessionmaker(bind=engine)
 session = DB_SESSION()
 
