@@ -251,10 +251,12 @@ class CommentsItem extends Suzaku.Widget
     @folded = true
     @liTpl = @UI['single-comment-li-tpl'].J.html();
     @initBtns()
+    @comments.sort (a,b)->
+      return b.praisenum - a.praisenum
     if @comments.length > 3
       first = @addItem @comments[0]
       @insertUnfoldBtn first
-      @addItem @comments[@comments.length - 1]
+      @lastLi = @addItem @comments[@comments.length - 1]
       @UI['fold'].onclick = (evt)=>
         evt.stopPropagation()
         @fold()
@@ -307,14 +309,15 @@ class CommentsItem extends Suzaku.Widget
     @UI['fold'].J.fadeIn "fast"
     @unfoldBtn.J.hide()
     for c,i in @comments when i > 0 and i < (@comments.length - 1)
-      item = @addItem c,true
+      item = @addItem c,false
+      item.before @lastLi
       @toggleItems.push item
     @folded = false
-  addItem:(data,animate = false)->
+  addItem:(data,autoAppend = true)->
     item = new CommentsItemCommentLi @liTpl,data,this,@api
     item.on "showSingleComment",=>
       @rightSection.showSingleComment data,this,@markData
-    item.appendTo @UI.list
+    if autoAppend then item.appendTo @UI.list
     return item
   insertUnfoldBtn:(target)->
     item = new Suzaku.Widget @UI['unfold-btn-tpl'].J.html()

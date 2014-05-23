@@ -486,10 +486,13 @@
       this.folded = true;
       this.liTpl = this.UI['single-comment-li-tpl'].J.html();
       this.initBtns();
+      this.comments.sort(function(a, b) {
+        return b.praisenum - a.praisenum;
+      });
       if (this.comments.length > 3) {
         first = this.addItem(this.comments[0]);
         this.insertUnfoldBtn(first);
-        this.addItem(this.comments[this.comments.length - 1]);
+        this.lastLi = this.addItem(this.comments[this.comments.length - 1]);
         this.UI['fold'].onclick = function(evt) {
           evt.stopPropagation();
           return _this.fold();
@@ -584,23 +587,26 @@
         if (!(i > 0 && i < (this.comments.length - 1))) {
           continue;
         }
-        item = this.addItem(c, true);
+        item = this.addItem(c, false);
+        item.before(this.lastLi);
         this.toggleItems.push(item);
       }
       return this.folded = false;
     };
 
-    CommentsItem.prototype.addItem = function(data, animate) {
+    CommentsItem.prototype.addItem = function(data, autoAppend) {
       var item,
         _this = this;
-      if (animate == null) {
-        animate = false;
+      if (autoAppend == null) {
+        autoAppend = true;
       }
       item = new CommentsItemCommentLi(this.liTpl, data, this, this.api);
       item.on("showSingleComment", function() {
         return _this.rightSection.showSingleComment(data, _this, _this.markData);
       });
-      item.appendTo(this.UI.list);
+      if (autoAppend) {
+        item.appendTo(this.UI.list);
+      }
       return item;
     };
 
